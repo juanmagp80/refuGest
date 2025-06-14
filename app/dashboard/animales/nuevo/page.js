@@ -3,14 +3,17 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { FaCalendarAlt, FaCat, FaCheckCircle, FaDog, FaIdBadge, FaInfoCircle, FaNotesMedical, FaSyringe, FaUserMd, FaVenusMars } from "react-icons/fa";
+import {
+    FaCalendarAlt, FaCat, FaCheckCircle, FaDog, FaIdBadge, FaInfoCircle,
+    FaNotesMedical, FaSyringe, FaUserMd, FaVenusMars
+} from "react-icons/fa";
 
 export default function NuevoAnimalPage() {
     const router = useRouter();
     const [form, setForm] = useState({
-        nombre: "",
-        especie: "",
-        raza: "",
+        name: "",
+        species: "",
+        breed: "",
         edad: "",
         sexo: "",
         descripcion: "",
@@ -22,6 +25,7 @@ export default function NuevoAnimalPage() {
         ultima_visita: "",
         veterinario: "",
         observaciones: "",
+        imagen: "",
     });
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
@@ -37,6 +41,12 @@ export default function NuevoAnimalPage() {
         setSuccess(null);
 
         const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+            setError("Debes iniciar sesión para registrar un animal.");
+            return;
+        }
+
         const { data: refugio } = await supabase
             .from("refugios")
             .select("id")
@@ -48,17 +58,35 @@ export default function NuevoAnimalPage() {
             return;
         }
 
-        const { error } = await supabase.from("animales").insert([{
+        const { error: insertError } = await supabase.from("animales").insert([{
             ...form,
             refugio_id: refugio.id,
         }]);
 
-        if (error) {
-            setError(error.message);
+        if (insertError) {
+            setError(insertError.message);
         } else {
-            setSuccess("¡Animal registrado correctamente!");
+            setSuccess("Animal registrado correctamente.");
             setTimeout(() => router.push("/dashboard/animales"), 1500);
         }
+    };
+
+    const openCloudinaryWidget = () => {
+        window.cloudinary.openUploadWidget(
+            {
+                cloudName: "dmx84o0ye",
+                uploadPreset: "animales",
+                sources: ["local", "url", "camera"],
+                multiple: false,
+                cropping: false,
+                defaultSource: "local"
+            },
+            (error, result) => {
+                if (!error && result && result.event === "success") {
+                    setForm({ ...form, imagen: result.info.secure_url });
+                }
+            }
+        );
     };
 
     return (
@@ -78,15 +106,15 @@ export default function NuevoAnimalPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="relative">
                         <FaIdBadge className="absolute left-3 top-3 text-blue-400" />
-                        <input name="nombre" placeholder="Nombre" value={form.nombre} onChange={handleChange} required className="text-black border-2 border-blue-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition" />
+                        <input name="name" placeholder="Nombre" value={form.name} onChange={handleChange} required className="text-black border-2 border-blue-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition" />
                     </div>
                     <div className="relative">
                         <FaDog className="absolute left-3 top-3 text-purple-400" />
-                        <input name="especie" placeholder="Especie" value={form.especie} onChange={handleChange} required className="text-black border-2 border-purple-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400 transition" />
+                        <input name="species" placeholder="Especie" value={form.species} onChange={handleChange} required className="text-black border-2 border-purple-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400 transition" />
                     </div>
                     <div className="relative">
                         <FaInfoCircle className="absolute left-3 top-3 text-pink-400" />
-                        <input name="raza" placeholder="Raza" value={form.raza} onChange={handleChange} className="text-black border-2 border-pink-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400 transition" />
+                        <input name="breed" placeholder="Raza" value={form.breed} onChange={handleChange} className="text-black border-2 border-pink-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-pink-400 transition" />
                     </div>
                     <div className="relative">
                         <FaCalendarAlt className="absolute left-3 top-3 text-green-400" />
@@ -113,6 +141,26 @@ export default function NuevoAnimalPage() {
                     <input type="checkbox" name="esterilizado" checked={form.esterilizado} onChange={handleChange} className="accent-blue-600 scale-125" />
                     Esterilizado
                 </label>
+
+                {/* Botón para subir imagen con Cloudinary */}
+                <button
+                    type="button"
+                    onClick={openCloudinaryWidget}
+                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded font-bold shadow transition-all duration-200"
+                >
+                    Subir imagen
+                </button>
+                {/* Previsualización de la imagen */}
+                {form.imagen && (
+                    <div className="flex justify-center">
+                        <img
+                            src={form.imagen}
+                            alt="Imagen subida"
+                            className="w-32 h-32 object-cover rounded-full border-4 border-blue-300 shadow-lg mt-2"
+                        />
+                    </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="relative">
                         <FaInfoCircle className="absolute left-3 top-3 text-blue-300" />
@@ -145,6 +193,7 @@ export default function NuevoAnimalPage() {
                         <FaCheckCircle /> {success}
                     </p>
                 )}
+
                 <button
                     type="submit"
                     className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl mt-4 font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
