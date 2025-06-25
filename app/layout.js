@@ -1,6 +1,14 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 
+// Define your Poppins font configuration
+const poppins = Poppins({
+  variable: "--font-poppins",
+  weight: ["100", "200", "300", "400", "500", "600", "700"], // You can define specific weights if you need
+  subsets: ["latin"],
+});
+
+// Other fonts
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -20,13 +28,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${poppins.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
-
-
-
         {children}
       </body>
     </html>
