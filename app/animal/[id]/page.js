@@ -8,15 +8,18 @@ import { FaCalendarAlt, FaCat, FaCheckCircle, FaDog, FaIdBadge, FaInfoCircle, Fa
 export default function FichaAnimal() {
     const params = useParams();
     const { id } = params;
+    console.log("ID recibido:", id);
+
     const [animal, setAnimal] = useState(null);
 
     useEffect(() => {
         const fetchAnimal = async () => {
             const { data, error } = await supabase
                 .from("animales")
-                .select("*")
-                .eq("id", id)
+                .select("*, refugios:refugio_id(name, provincia)").eq("id", id)
                 .single();
+            console.log("Animal cargado:", data);
+
             if (!error) setAnimal(data);
         };
         fetchAnimal();
@@ -52,6 +55,12 @@ export default function FichaAnimal() {
                 </div>
                 {/* Datos */}
                 <div className="grid grid-cols-1 gap-3 text-black text-lg">
+                    <div className="flex items-center gap-2">
+                        <FaCalendarAlt className="text-blue-400" /> <b>Nombre del Refugio:</b> {animal.refugios?.name}
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <FaCalendarAlt className="text-blue-400" /> <b>Provincia:</b> {animal.refugios?.provincia}
+                    </div>
                     <div className="flex items-center gap-2">
                         <FaCalendarAlt className="text-blue-400" /> <b>Edad:</b> {animal.edad}
                     </div>

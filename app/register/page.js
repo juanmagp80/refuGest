@@ -2,8 +2,16 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { FaEnvelope, FaHome, FaInfoCircle, FaLock, FaMapMarkerAlt, FaPaw, FaPhone } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import {
+    FaEnvelope,
+    FaHome,
+    FaLock,
+    FaMapMarkerAlt,
+    FaPaw,
+    FaPhone,
+    FaUser
+} from "react-icons/fa";
 
 export default function RegisterPage() {
     const router = useRouter();
@@ -11,11 +19,84 @@ export default function RegisterPage() {
         email: "",
         password: "",
         name: "",
-        location: "",
+        provincia: "",
         contact_info: "",
-        description: "",
+        user_type: "",
+        refugio_id: "",
     });
+
     const [error, setError] = useState(null);
+    const [refugios, setRefugios] = useState([]);
+
+    const provincias = [
+        "Álava",
+        "Albacete",
+        "Alicante",
+        "Almería",
+        "Asturias",
+        "Ávila",
+        "Badajoz",
+        "Barcelona",
+        "Burgos",
+        "Cáceres",
+        "Cádiz",
+        "Cantabria",
+        "Castellón",
+        "Ciudad Real",
+        "Córdoba",
+        "Cuenca",
+        "Girona",
+        "Granada",
+        "Guadalajara",
+        "Guipúzcoa",
+        "Huelva",
+        "Huesca",
+        "Islas Baleares",
+        "Jaén",
+        "La Coruña",
+        "La Rioja",
+        "Las Palmas",
+        "León",
+        "Lleida",
+        "Lugo",
+        "Madrid",
+        "Málaga",
+        "Murcia",
+        "Navarra",
+        "Ourense",
+        "Palencia",
+        "Pontevedra",
+        "Salamanca",
+        "Santa Cruz de Tenerife",
+        "Segovia",
+        "Sevilla",
+        "Soria",
+        "Tarragona",
+        "Teruel",
+        "Toledo",
+        "Valencia",
+        "Valladolid",
+        "Vizcaya",
+        "Zamora",
+        "Zaragoza",
+        "Ceuta",
+        "Melilla"
+    ];
+
+    useEffect(() => {
+        const fetchRefugios = async () => {
+            if (form.user_type === "voluntario" && form.provincia) {
+                const { data, error } = await supabase
+                    .from("refugios")
+                    .select("id, name")
+                    .eq("provincia", form.provincia);
+
+                if (!error) setRefugios(data);
+            }
+        };
+
+        fetchRefugios();
+    }, [form.provincia, form.user_type]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,7 +106,6 @@ export default function RegisterPage() {
         e.preventDefault();
         setError(null);
 
-        // 1. Registrar usuario
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: form.email,
             password: form.password,
@@ -42,25 +122,28 @@ export default function RegisterPage() {
             return;
         }
 
-        // 2. Crear refugio asociado
-        const { error: refugioError } = await supabase
-            .from("refugios")
-            .insert([
-                {
-                    name: form.name,
-                    location: form.location,
-                    contact_info: form.contact_info,
-                    description: form.description,
-                    user_id: user.id,
-                },
-            ]);
+        let tableName = form.user_type === "refugio" ? "refugios" : form.user_type === "voluntario" ? "voluntarios" : "adoptantes";
 
-        if (refugioError) {
-            setError(refugioError.message);
+        const insertData = {
+            name: form.name,
+            provincia: form.provincia,
+            contact_info: form.contact_info,
+
+            user_id: user.id,
+        };
+
+        if (form.user_type === "refugio") insertData.location = form.provincia;
+        if (form.user_type === "voluntario") insertData.refugio_id = form.refugio_id;
+
+        const { error: insertError } = await supabase
+            .from(tableName)
+            .insert([insertData]);
+
+        if (insertError) {
+            setError(insertError.message);
             return;
         }
 
-        // 3. Redirigir al dashboard
         router.push("/dashboard");
     };
 
@@ -72,9 +155,30 @@ export default function RegisterPage() {
             >
                 <div className="flex flex-col items-center gap-2 mb-2">
                     <FaPaw className="text-4xl text-pink-500 drop-shadow" />
-                    <h1 className="text-3xl font-extrabold text-blue-700 tracking-tight drop-shadow-lg">Registro de refugio</h1>
-                    <p className="text-gray-500 text-sm">Crea tu cuenta y da de alta tu refugio</p>
+                    <h1 className="text-3xl font-extrabold text-blue-700 tracking-tight drop-shadow-lg">
+                        Registro de usuario
+                    </h1>
+                    <p className="text-gray-500 text-sm">Crea tu cuenta como refugio, voluntario o adoptante</p>
                 </div>
+
+                {/* Tipo de usuario */}
+                <div className="relative">
+                    <FaUser className="absolute left-3 top-3 text-indigo-400" />
+                    <select
+                        name="user_type"
+                        value={form.user_type}
+                        onChange={handleChange}
+                        required
+                        className="pl-10 border-2 border-indigo-200 rounded-lg py-2 w-full text-black bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+                    >
+                        <option value="">Selecciona tipo de usuario</option>
+                        <option value="refugio">Refugio</option>
+                        <option value="voluntario">Voluntario</option>
+                        <option value="adoptante">Adoptante</option>
+                    </select>
+                </div>
+
+                {/* Email */}
                 <div className="relative">
                     <FaEnvelope className="absolute left-3 top-3 text-blue-400" />
                     <input
@@ -87,6 +191,8 @@ export default function RegisterPage() {
                         className="pl-10 border-2 border-blue-200 rounded-lg py-2 w-full text-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                     />
                 </div>
+
+                {/* Contraseña */}
                 <div className="relative">
                     <FaLock className="absolute left-3 top-3 text-purple-400" />
                     <input
@@ -99,28 +205,67 @@ export default function RegisterPage() {
                         className="pl-10 border-2 border-purple-200 rounded-lg py-2 w-full text-black focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
                     />
                 </div>
+
+                {/* Nombre */}
                 <div className="relative">
                     <FaHome className="absolute left-3 top-3 text-yellow-400" />
                     <input
                         name="name"
-                        placeholder="Nombre del refugio"
+                        placeholder={
+                            form.user_type === "refugio"
+                                ? "Nombre del refugio"
+                                : form.user_type === "voluntario"
+                                    ? "Nombre del voluntario"
+                                    : "Nombre del adoptante"
+                        }
                         value={form.name}
                         onChange={handleChange}
                         required
                         className="pl-10 border-2 border-yellow-200 rounded-lg py-2 w-full text-black focus:outline-none focus:ring-2 focus:ring-yellow-400 transition"
                     />
                 </div>
+
+                {/* Provincia */}
                 <div className="relative">
                     <FaMapMarkerAlt className="absolute left-3 top-3 text-green-400" />
-                    <input
-                        name="location"
-                        placeholder="Ubicación"
-                        value={form.location}
+                    <select
+                        name="provincia"
+                        value={form.provincia}
                         onChange={handleChange}
                         required
-                        className="pl-10 border-2 border-green-200 rounded-lg py-2 w-full text-black focus:outline-none focus:ring-2 focus:ring-green-400 transition"
-                    />
+                        className="pl-10 border-2 border-green-200 rounded-lg py-2 w-full text-black bg-white focus:outline-none focus:ring-2 focus:ring-green-400 transition"
+                    >
+                        <option value="">Selecciona una provincia</option>
+                        {provincias.map((provincia) => (
+                            <option key={provincia} value={provincia}>
+                                {provincia}
+                            </option>
+                        ))}
+                    </select>
                 </div>
+
+                {/* Refugio selector si es voluntario */}
+                {form.user_type === "voluntario" && (
+                    <div className="relative">
+                        <FaHome className="absolute left-3 top-3 text-pink-400" />
+                        <select
+                            name="refugio_id"
+                            value={form.refugio_id}
+                            onChange={handleChange}
+                            required
+                            className="pl-10 border-2 border-pink-200 rounded-lg py-2 w-full text-black bg-white focus:outline-none focus:ring-2 focus:ring-pink-400 transition"
+                        >
+                            <option value="">Selecciona refugio</option>
+                            {refugios.map((r) => (
+                                <option key={r.id} value={r.id}>
+                                    {r.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                {/* Contacto */}
                 <div className="relative">
                     <FaPhone className="absolute left-3 top-3 text-pink-400" />
                     <input
@@ -132,18 +277,11 @@ export default function RegisterPage() {
                         className="pl-10 border-2 border-pink-200 rounded-lg py-2 w-full text-black focus:outline-none focus:ring-2 focus:ring-pink-400 transition"
                     />
                 </div>
-                <div className="relative">
-                    <FaInfoCircle className="absolute left-3 top-3 text-blue-300" />
-                    <textarea
-                        name="description"
-                        placeholder="Descripción"
-                        value={form.description}
-                        onChange={handleChange}
-                        required
-                        className="pl-10 border-2 border-blue-100 rounded-lg py-2 w-full text-black focus:outline-none focus:ring-2 focus:ring-blue-300 transition min-h-[60px]"
-                    />
-                </div>
+
+
+
                 {error && <div className="text-red-600 text-center font-semibold">{error}</div>}
+
                 <button
                     type="submit"
                     className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
@@ -151,22 +289,33 @@ export default function RegisterPage() {
                     Registrarse
                 </button>
             </form>
+
             <style jsx global>{`
-                @keyframes fade-in {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                .animate-fade-in {
-                    animation: fade-in 1s ease;
-                }
-                @keyframes slide-up {
-                    from { transform: translateY(40px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-                .animate-slide-up {
-                    animation: slide-up 0.8s cubic-bezier(.4,2,.6,1) 0.1s both;
-                }
-            `}</style>
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 1s ease;
+        }
+        @keyframes slide-up {
+          from {
+            transform: translateY(40px);
+            opacity: 0;
+          }
+          to {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-up {
+          animation: slide-up 0.8s cubic-bezier(0.4, 2, 0.6, 1) 0.1s both;
+        }
+      `}</style>
         </div>
     );
 }
