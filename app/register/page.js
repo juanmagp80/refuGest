@@ -27,60 +27,17 @@ export default function RegisterPage() {
 
     const [error, setError] = useState(null);
     const [refugios, setRefugios] = useState([]);
+    const [animales, setAnimales] = useState([]);  // Estado para almacenar los animales cargados
 
     const provincias = [
-        "Álava",
-        "Albacete",
-        "Alicante",
-        "Almería",
-        "Asturias",
-        "Ávila",
-        "Badajoz",
-        "Barcelona",
-        "Burgos",
-        "Cáceres",
-        "Cádiz",
-        "Cantabria",
-        "Castellón",
-        "Ciudad Real",
-        "Córdoba",
-        "Cuenca",
-        "Girona",
-        "Granada",
-        "Guadalajara",
-        "Guipúzcoa",
-        "Huelva",
-        "Huesca",
-        "Islas Baleares",
-        "Jaén",
-        "La Coruña",
-        "La Rioja",
-        "Las Palmas",
-        "León",
-        "Lleida",
-        "Lugo",
-        "Madrid",
-        "Málaga",
-        "Murcia",
-        "Navarra",
-        "Ourense",
-        "Palencia",
-        "Pontevedra",
-        "Salamanca",
-        "Santa Cruz de Tenerife",
-        "Segovia",
-        "Sevilla",
-        "Soria",
-        "Tarragona",
-        "Teruel",
-        "Toledo",
-        "Valencia",
-        "Valladolid",
-        "Vizcaya",
-        "Zamora",
-        "Zaragoza",
-        "Ceuta",
-        "Melilla"
+        "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz",
+        "Barcelona", "Burgos", "Cáceres", "Cádiz", "Cantabria", "Castellón", "Ciudad Real",
+        "Córdoba", "Cuenca", "Girona", "Granada", "Guadalajara", "Guipúzcoa", "Huelva",
+        "Huesca", "Islas Baleares", "Jaén", "La Coruña", "La Rioja", "Las Palmas", "León",
+        "Lleida", "Lugo", "Madrid", "Málaga", "Murcia", "Navarra", "Ourense", "Palencia",
+        "Pontevedra", "Salamanca", "Santa Cruz de Tenerife", "Segovia", "Sevilla", "Soria",
+        "Tarragona", "Teruel", "Toledo", "Valencia", "Valladolid", "Vizcaya", "Zamora", "Zaragoza",
+        "Ceuta", "Melilla"
     ];
 
     useEffect(() => {
@@ -97,6 +54,27 @@ export default function RegisterPage() {
 
         fetchRefugios();
     }, [form.provincia, form.user_type]);
+
+    // Cargar animales cuando se selecciona el refugio
+    useEffect(() => {
+        if (form.user_type === "voluntario" && form.refugio_id) {
+            const fetchAnimals = async () => {
+                const { data, error } = await supabase
+                    .from("animales")
+                    .select("*")
+                    .eq("refugio_id", form.refugio_id);
+
+                if (error) {
+                    console.error("Error al cargar los animales:", error);
+                    return;
+                }
+
+                setAnimales(data);  // Guardamos los animales en el estado
+            };
+
+            fetchAnimals();
+        }
+    }, [form.refugio_id]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
@@ -128,7 +106,6 @@ export default function RegisterPage() {
             name: form.name,
             provincia: form.provincia,
             contact_info: form.contact_info,
-
             user_id: user.id,
         };
 
@@ -278,8 +255,6 @@ export default function RegisterPage() {
                     />
                 </div>
 
-
-
                 {error && <div className="text-red-600 text-center font-semibold">{error}</div>}
 
                 <button
@@ -291,31 +266,31 @@ export default function RegisterPage() {
             </form>
 
             <style jsx global>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 1s ease;
-        }
-        @keyframes slide-up {
-          from {
-            transform: translateY(40px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-up {
-          animation: slide-up 0.8s cubic-bezier(0.4, 2, 0.6, 1) 0.1s both;
-        }
-      `}</style>
+                @keyframes fade-in {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
+                }
+                .animate-fade-in {
+                    animation: fade-in 1s ease;
+                }
+                @keyframes slide-up {
+                    from {
+                        transform: translateY(40px);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+                }
+                .animate-slide-up {
+                    animation: slide-up 0.8s cubic-bezier(0.4, 2, 0.6, 1) 0.1s both;
+                }
+            `}</style>
         </div>
     );
 }
