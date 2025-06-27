@@ -6,7 +6,6 @@ import EnviarNotificacion from "@/components/EnviarNotificacion";
 import MisTareas from "@/components/MisTareas";
 import NotificacionIcon from "@/components/NotificacionIcon";
 import PanelNotificaciones from "@/components/PanelNotificaciones";
-import RespuestasVoluntarios from "@/components/RespuestasVoluntarios";
 import VoluntarioAnimales from "@/components/VoluntarioAnimales";
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
@@ -149,7 +148,7 @@ export default function DashboardPage() {
                     <div className="mt-8">
                         <AsignarTarea refugioId={refugio.id} />
                         <EnviarNotificacion refugioId={refugio.id} />
-                        <RespuestasVoluntarios refugioId={refugio.id} />
+
 
                     </div>
                 </div>

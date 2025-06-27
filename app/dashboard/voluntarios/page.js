@@ -2,6 +2,7 @@
 
 import AsignarTarea from "@/components/AsignarTarea";
 import EnviarNotificacion from "@/components/EnviarNotificacion";
+import RespuestasVoluntarios from "@/components/RespuestasVoluntarios";
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react";
 
@@ -10,6 +11,7 @@ export default function VoluntariosPage() {
     const [voluntarioSeleccionado, setVoluntarioSeleccionado] = useState(null);
     const [tareasPendientes, setTareasPendientes] = useState([]);
     const [refugio, setRefugio] = useState(null);
+    const [respuestas, setRespuestas] = useState([]); // Definir el estado de respuestas
 
     useEffect(() => {
         const cargarVoluntarios = async () => {
@@ -30,7 +32,7 @@ export default function VoluntariosPage() {
                 return;
             }
 
-            setRefugio(refugioData); // <- importante para notificaciones
+            setRefugio(refugioData);
 
             const { data: listaVoluntarios } = await supabase
                 .from("voluntarios")
@@ -43,9 +45,24 @@ export default function VoluntariosPage() {
         cargarVoluntarios();
     }, []);
 
+    const cargarRespuestas = async (voluntarioId) => { // Mover la función fuera de useEffect
+        const { data, error } = await supabase
+            .from("notificaciones")
+            .select("id, mensaje, respuesta, respondida, created_at")  // Selecciona las columnas necesarias
+            .eq("voluntario_id", voluntarioId)
+            .eq("respondida", true);  // Solo obtenemos las notificaciones que han sido respondidas
+
+        if (error) {
+            console.error("Error cargando respuestas:", error);
+        } else {
+            setRespuestas(data);  // Guarda las respuestas en el estado
+        }
+    };
+
     const seleccionarVoluntario = (voluntario) => {
         setVoluntarioSeleccionado(voluntario);
         cargarTareas(voluntario.id);
+        cargarRespuestas(voluntario.id);  // Llama a cargar las respuestas también
     };
 
     const cargarTareas = async (voluntarioId) => {
@@ -127,6 +144,7 @@ export default function VoluntariosPage() {
                                     refugioId={refugio.id}
                                 />
                             )}
+                            <RespuestasVoluntarios respuestas={respuestas} />
                         </>
                     ) : (
                         <p className="text-gray-500 text-lg">Selecciona un voluntario para ver sus tareas.</p>
