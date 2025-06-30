@@ -1,10 +1,9 @@
 "use client";
 
-import AsignarTarea from "@/components/AsignarTarea";
-import EnviarNotificacion from "@/components/EnviarNotificacion";
-import RespuestasVoluntarios from "@/components/RespuestasVoluntarios";
+import ChatConversacion from "@/components/ChatConversacion";
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react";
+
 
 export default function VoluntariosPage() {
     const [voluntarios, setVoluntarios] = useState(null);
@@ -103,8 +102,7 @@ export default function VoluntariosPage() {
                                 <li key={v.id}>
                                     <button
                                         onClick={() => seleccionarVoluntario(v)}
-                                        className={`w-full text-left px-4 py-2 rounded-lg hover:bg-blue-100 font-medium ${voluntarioSeleccionado?.id === v.id ? "bg-blue-200" : ""
-                                            }`}
+                                        className={`w-full text-left px-4 py-2 rounded-lg hover:bg-blue-100 font-medium ${voluntarioSeleccionado?.id === v.id ? "bg-blue-200" : ""}`}
                                     >
                                         {v.name}
                                     </button>
@@ -132,19 +130,20 @@ export default function VoluntariosPage() {
                                     <p className="text-gray-500">Sin tareas pendientes.</p>
                                 )}
                             </ul>
+                            {refugio?.id && voluntarioSeleccionado?.id && (
+                                <>
 
-                            <AsignarTarea
-                                voluntarioId={voluntarioSeleccionado.id}
-                                onTareaAsignada={() => cargarTareas(voluntarioSeleccionado.id)}
-                            />
 
-                            {refugio && (
-                                <EnviarNotificacion
-                                    voluntarioId={voluntarioSeleccionado.id}
-                                    refugioId={refugio.id}
-                                />
+                                    <div className="mt-6">
+                                        <h2 className="text-xl font-semibold mb-2">Chat con el voluntario</h2>
+                                        <ChatConversacion
+                                            refugioId={refugio.id}
+                                            voluntarioId={voluntarioSeleccionado.id}
+                                        />
+                                    </div>
+                                </>
                             )}
-                            <RespuestasVoluntarios respuestas={respuestas} />
+
                         </>
                     ) : (
                         <p className="text-gray-500 text-lg">Selecciona un voluntario para ver sus tareas.</p>

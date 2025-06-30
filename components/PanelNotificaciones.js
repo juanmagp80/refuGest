@@ -3,7 +3,7 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react";
 
-export default function PanelNotificaciones({ voluntarioId }) {
+export default function PanelNotificaciones({ voluntarioId, onSeleccionarConversacion }) {
     const [notificaciones, setNotificaciones] = useState([]);
     const [respuestas, setRespuestas] = useState({});
     const [loading, setLoading] = useState(false);
@@ -84,7 +84,6 @@ export default function PanelNotificaciones({ voluntarioId }) {
         } else {
             alert("Respuesta enviada");
             setRespuestas({ ...respuestas, [id]: "" });
-            // Actualiza localmente la notificación respondida
             setNotificaciones((current) =>
                 current.map((n) =>
                     n.id === id ? { ...n, respondida: true, respuesta: respuestas[id] } : n
@@ -104,6 +103,14 @@ export default function PanelNotificaciones({ voluntarioId }) {
                     <p className="text-xs text-gray-500 mb-2">
                         Recibido: {new Date(n.created_at).toLocaleString()}
                     </p>
+
+                    {/* Botón para abrir chat con el refugio */}
+                    <button
+                        onClick={() => onSeleccionarConversacion(n.refugio_id)}
+                        className="text-sm text-green-600 underline mb-2"
+                    >
+                        Abrir chat con refugio
+                    </button>
 
                     {!n.leida && (
                         <button
