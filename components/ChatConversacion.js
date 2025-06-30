@@ -15,56 +15,42 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
     useEffect(() => {
         if (!refugioId || !voluntarioId) return;
         cargarMensajes();
-
-        // Conexión al canal de WebSocket y suscripción a los cambios
         const canal = supabase
             .channel("conversaciones-chat")
-            .on("postgres_changes", {
-                event: "INSERT",
-                schema: "public",
-                table: "chat"
-            }, (payload) => {
-                // Solo actualizar si el refugio y el voluntario coinciden
-                if (
-                    payload.new.refugio_id === refugioId &&
-                    payload.new.voluntario_id === voluntarioId
-                ) {
-                    setMensajes((prev) => [...prev, payload.new]);
+            .on(
+                "postgres_changes",
+                { event: "INSERT", schema: "public", table: "chat" },
+                (payload) => {
+                    if (
+                        payload.new.refugio_id === refugioId &&
+                        payload.new.voluntario_id === voluntarioId
+                    ) {
+                        setMensajes((prev) => [...prev, payload.new]);
+                    }
                 }
-            })
+            )
             .subscribe();
-
-        // Monitorear si hay errores con el canal
-        canal.on("error", (err) => {
-            console.error("Error al suscribirse al canal:", err);
-        });
-
-        // Cleanup: desconectar el canal cuando el componente se desmonte
-        return () => {
-            supabase.removeChannel(canal);
-        };
+        return () => supabase.removeChannel(canal);
     }, [refugioId, voluntarioId]);
 
-    // Función para cargar los mensajes del chat
     const cargarMensajes = async () => {
         const { data, error } = await supabase
             .from("chat")
             .select(`
-                id,
-                mensaje,
-                created_at,
-                remitente,
-                refugio_id,
-                voluntario_id,
-                leido_refugio,
-                leido_voluntario,
-                refugios(name),
-                voluntarios(name)
-            `)
+            id,
+            mensaje,
+            created_at,
+            remitente,
+            refugio_id,
+            voluntario_id,
+            leido_refugio,
+            leido_voluntario,
+            refugios(name),  
+            voluntarios(name)
+        `)
             .eq("refugio_id", refugioId)
             .eq("voluntario_id", voluntarioId)
-            .order("created_at", { ascending: true })
-            .limit(0); // Esto elimina el límite de filas
+            .order("created_at", { ascending: true });
 
         if (error) {
             console.error("Error al cargar los mensajes:", error);
@@ -73,23 +59,18 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
         }
     };
 
-    // Función para enviar un mensaje
+
+
     const enviarMensaje = async () => {
         if (!nuevoMensaje.trim()) return;
-
-        const { error } = await supabase.from("chat").insert({
+        await supabase.from("chat").insert({
             refugio_id: refugioId,
             voluntario_id: voluntarioId,
             mensaje: nuevoMensaje,
             remitente,
-            leido_refugio: false, // Inicializado en false
-            leido_voluntario: false, // Inicializado en false
+            leido_refugio: false, // inicializado en false
+            leido_voluntario: false, // inicializado en false
         });
-
-        if (error) {
-            console.error("Error al enviar el mensaje:", error);
-            return;
-        }
 
         setNuevoMensaje("");
 
@@ -98,25 +79,17 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
         setTimeout(() => setMensajeEnviado(false), 3000); // Ocultar el mensaje después de 3 segundos
     };
 
-    // Función para cerrar la conversación
     const cerrarConversacion = async () => {
-        const { error } = await supabase.from("chat").insert({
+        await supabase.from("chat").insert({
             refugio_id: refugioId,
             voluntario_id: voluntarioId,
             mensaje: "Conversación cerrada",
             autor: "sistema",
             cerrado: true,
         });
-
-        if (error) {
-            console.error("Error al cerrar la conversación:", error);
-            return;
-        }
-
         setCerrado(true);
     };
 
-    // Función para actualizar el estado de "leído" del refugio
     const actualizarLeidoRefugio = async (mensajeId) => {
         const { data, error } = await supabase
             .from("chat")
@@ -131,7 +104,6 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
         }
     };
 
-    // Función para actualizar el estado de "leído" del voluntario
     const actualizarLeidoVoluntario = async (mensajeId) => {
         const { data, error } = await supabase
             .from("chat")
@@ -146,7 +118,6 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
         }
     };
 
-    // Desplazar hacia el último mensaje cuando se agregue un nuevo mensaje
     useEffect(() => {
         scrollRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [mensajes]);
@@ -165,7 +136,7 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
                     >
                         <div className="flex justify-between">
                             <div className="font-semibold text-sm text-white">
-                                {m.remitente === "refugio" ? m.refugio.name : m.voluntario.name}
+                                {m.remitente === "refugio" ? m.refugios?.name || "Refugio Desconocido" : m.voluntarios?.name || "Voluntario Desconocido"}
                             </div>
                             <div className="text-xs text-gray-200">
                                 {new Date(m.created_at).toLocaleString()}
