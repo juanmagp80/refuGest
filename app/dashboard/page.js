@@ -1,6 +1,9 @@
 "use client";
 
 import Animales from "@/components/Animales";
+import ChatConversacion from "@/components/ChatConversacion";
+import DisponibilidadVoluntarios from "@/components/DisponibilidadVoluntarios";
+import MiDisponibilidad from "@/components/MiDisponibilidad";
 import MisTareas from "@/components/MisTareas";
 import NotificacionIcon from "@/components/NotificacionIcon";
 import PanelNotificaciones from "@/components/PanelNotificaciones";
@@ -19,7 +22,6 @@ import {
     FaUsers,
 } from "react-icons/fa";
 
-import ChatConversacion from "@/components/ChatConversacion";
 
 export default function DashboardPage() {
     const router = useRouter();
@@ -114,11 +116,39 @@ export default function DashboardPage() {
                                 >
                                     Animales
                                 </button>
+                                <button
+                                    onClick={() => setVista("chat")}
+                                    className={`px-4 py-2 rounded-full font-bold transition ${vista === "chat" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"
+                                        }`}
+                                >
+                                    Chat
+                                </button>
+                                <button
+                                    onClick={() => setVista("disponibilidad")}
+                                    className={`px-4 py-2 rounded-full font-bold transition ${vista === "disponibilidad" ? "bg-yellow-500 text-white" : "bg-gray-200 text-gray-700"
+                                        }`}
+                                >
+                                    Disponibilidad
+                                </button>
+
                             </div>
 
                             {/* Contenido dinámico */}
                             {vista === "tareas" && <MisTareas />}
+                            {vista === "disponibilidad" && <MiDisponibilidad voluntarioId={voluntario.id} />}
+
                             {vista === "animales" && <VoluntarioAnimales />}
+                            {vista === "chat" && (
+                                <ChatConversacion
+                                    refugioId={voluntario.refugio_id}
+                                    voluntarioId={voluntario.id}
+                                    remitente="voluntario"
+                                />
+
+                            )}
+
+
+
                         </>
                     ) : (
                         <>
@@ -128,10 +158,20 @@ export default function DashboardPage() {
                             >
                                 ← Volver a notificaciones
                             </button>
+                            <button
+                                onClick={() => setVista("disponibilidad")}
+                                className={`px-4 py-2 rounded-full font-bold transition ${vista === "disponibilidad"
+                                    ? "bg-yellow-500 text-white"
+                                    : "bg-gray-200 text-gray-700"
+                                    }`}
+                            >
+                                Disponibilidad
+                            </button>
+
                             <ChatConversacion
                                 refugioId={chatRefugioId}
                                 voluntarioId={voluntario.id}
-                                autor="voluntario"
+                                remitente="voluntario"
                             />
                         </>
                     )}
@@ -173,7 +213,7 @@ export default function DashboardPage() {
                 <ul className="flex gap-8 items-center">
                     <li>
                         <Link
-                            href="/dashboard"
+                            href="/"
                             className="flex items-center gap-2 text-blue-700 hover:text-pink-500 font-bold transition text-lg"
                         >
                             <FaHome /> Inicio
@@ -238,35 +278,37 @@ export default function DashboardPage() {
                         ¡Bienvenido! Aquí podrás gestionar animales, voluntarios y adoptantes.
                     </p>
                     <Animales refugioId={refugio.id} />
+                    <DisponibilidadVoluntarios refugioId={refugio.id} />
+
                 </div>
             </div>
 
             <style jsx global>{`
-        @keyframes fade-in {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        .animate-fade-in {
-          animation: fade-in 1s ease;
-        }
-        @keyframes slide-down {
-          from {
-            transform: translateY(-40px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        .animate-slide-down {
-          animation: slide-down 0.8s cubic-bezier(0.4, 2, 0.6, 1) 0.1s both;
-        }
-      `}</style>
+            @keyframes fade-in {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+            }
+            .animate-fade-in {
+            animation: fade-in 1s ease;
+            }
+            @keyframes slide-down {
+            from {
+                transform: translateY(-40px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            }
+            .animate-slide-down {
+            animation: slide-down 0.8s cubic-bezier(0.4, 2, 0.6, 1) 0.1s both;
+            }
+        `}</style>
         </div>
     );
 }

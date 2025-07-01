@@ -41,7 +41,8 @@ export default function AsignarTarea({ voluntarioId }) {
                 volunteer_id: voluntarioId,
                 task_name: form.task_name,
                 description: form.description,
-                assigned_at: new Date().toISOString()
+                assigned_at: new Date().toISOString(),
+                status: "Pendiente" // 👈 Usa el valor exacto
             }]);
 
         console.log("Respuesta de insert:", { data, error });

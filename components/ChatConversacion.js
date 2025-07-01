@@ -3,11 +3,10 @@
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useRef, useState } from "react";
 
-export default function ChatConversacion({ refugioId, voluntarioId }) {
+export default function ChatConversacion({ refugioId, voluntarioId, remitente }) {
     const [mensajes, setMensajes] = useState([]);
     const [nuevoMensaje, setNuevoMensaje] = useState("");
     const [cerrado, setCerrado] = useState(false);
-    const [remitente, setRemitente] = useState("refugio"); // o "voluntario"
     const [mensajeEnviado, setMensajeEnviado] = useState(false); // Estado para la notificación
 
     const scrollRef = useRef(null);
@@ -37,17 +36,18 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
         const { data, error } = await supabase
             .from("chat")
             .select(`
-            id,
-            mensaje,
-            created_at,
-            remitente,
-            refugio_id,
-            voluntario_id,
-            leido_refugio,
-            leido_voluntario,
-            refugios(name),  
-            voluntarios(name)
-        `)
+  id,
+  mensaje,
+  created_at,
+  remitente,
+  cerrado,
+  leido_refugio,
+  leido_voluntario,
+  refugio:refugio_id(name),
+  voluntario:voluntario_id(name)
+`)
+
+
             .eq("refugio_id", refugioId)
             .eq("voluntario_id", voluntarioId)
             .order("created_at", { ascending: true });
@@ -68,8 +68,6 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
             voluntario_id: voluntarioId,
             mensaje: nuevoMensaje,
             remitente,
-            leido_refugio: false, // inicializado en false
-            leido_voluntario: false, // inicializado en false
         });
 
         setNuevoMensaje("");
@@ -88,6 +86,19 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
             cerrado: true,
         });
         setCerrado(true);
+    };
+    const eliminarMensaje = async (id) => {
+        const { error } = await supabase
+            .from("chat")
+            .delete()
+            .eq("id", id);
+
+        if (error) {
+            console.error("Error al eliminar mensaje:", error);
+            alert("Error al eliminar el mensaje");
+        } else {
+            setMensajes((prev) => prev.filter((m) => m.id !== id));
+        }
     };
 
     const actualizarLeidoRefugio = async (mensajeId) => {
@@ -134,22 +145,36 @@ export default function ChatConversacion({ refugioId, voluntarioId }) {
                             : "bg-gray-200 text-gray-900"
                             }`}
                     >
-                        <div className="flex justify-between">
-                            <div className="font-semibold text-sm text-white">
-                                {m.remitente === "refugio" ? m.refugios?.name || "Refugio Desconocido" : m.voluntarios?.name || "Voluntario Desconocido"}
+                        <div className="flex justify-between items-center">
+                            <div className="font-semibold text-sm text-black">
+                                {m.remitente === "refugio"
+                                    ? m.refugio?.name || "Refugio"
+                                    : m.voluntario?.name || "Voluntario"}
                             </div>
                             <div className="text-xs text-gray-200">
                                 {new Date(m.created_at).toLocaleString()}
                             </div>
                         </div>
+
                         <div className="text-lg mt-1">{m.mensaje}</div>
-                        <div className="text-xs mt-2">
-                            <span className={`font-semibold ${m.leido_refugio || m.leido_voluntario ? 'text-green-400' : 'text-red-500'}`}>
-                                {m.leido_refugio || m.leido_voluntario ? 'Leído' : 'No leído'}
-                            </span>
+
+                        <div className="mt-2 flex justify-between items-center text-xs">
+
+
+                            {/* Solo puede eliminar el autor del mensaje */}
+                            {m.remitente.toLowerCase() === remitente.toLowerCase() && (
+                                <button
+                                    onClick={() => eliminarMensaje(m.id)}
+                                    className="text-red-500 ml-2 hover:underline"
+                                >
+                                    Eliminar
+                                </button>
+                            )}
+
                         </div>
                     </div>
                 ))}
+
                 <div ref={scrollRef} />
             </div>
 
