@@ -200,14 +200,6 @@ export default function ChatConversacion({ refugioId, voluntarioId, remitente })
                 </p>
             )}
 
-            {!cerrado && (
-                <button
-                    onClick={cerrarConversacion}
-                    className="mt-4 text-sm text-red-600 underline font-bold hover:text-red-700 transition-all duration-300"
-                >
-                    Cerrar conversación
-                </button>
-            )}
 
             {/* Notificación de mensaje enviado */}
             {mensajeEnviado && (

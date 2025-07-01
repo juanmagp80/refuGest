@@ -1,314 +1,68 @@
 "use client";
 
-import Animales from "@/components/Animales";
-import ChatConversacion from "@/components/ChatConversacion";
-import DisponibilidadVoluntarios from "@/components/DisponibilidadVoluntarios";
-import MiDisponibilidad from "@/components/MiDisponibilidad";
-import MisTareas from "@/components/MisTareas";
-import NotificacionIcon from "@/components/NotificacionIcon";
-import PanelNotificaciones from "@/components/PanelNotificaciones";
-import VoluntarioAnimales from "@/components/VoluntarioAnimales";
 import { supabase } from "@/lib/supabaseClient";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-
-import {
-    FaHandsHelping,
-    FaHome,
-    FaPaw,
-    FaSignOutAlt,
-    FaUserCircle,
-    FaUsers,
-} from "react-icons/fa";
-
+import DashboardRefugio from "./DashboardRefugio";
+import DashboardVoluntario from "./DashboardVoluntario.js";
 
 export default function DashboardPage() {
+    const [userType, setUserType] = useState(null); // "voluntario" | "refugio" | null
+    const [loading, setLoading] = useState(true);
+    const [userData, setUserData] = useState(null);
     const router = useRouter();
-    const [refugio, setRefugio] = useState(null);
-    const [voluntario, setVoluntario] = useState(null);
-    const [vista, setVista] = useState("tareas");
-    const [mostrarPanel, setMostrarPanel] = useState(false);
-
-    // Estado para chat: id del refugio con el que se conversa
-    const [chatRefugioId, setChatRefugioId] = useState(null);
 
     useEffect(() => {
-        supabase.auth.getUser().then(async ({ data: { user } }) => {
+        async function fetchUser() {
+            const { data: { user } } = await supabase.auth.getUser();
+
             if (!user) {
                 router.push("/login");
-            } else {
-                const { data: refugioData } = await supabase
-                    .from("refugios")
-                    .select("id, name, location, contact_info, description")
-                    .eq("user_id", user.id)
-                    .single();
-
-                if (refugioData) {
-                    setRefugio(refugioData);
-                    return;
-                }
-
-                const { data: voluntarioData } = await supabase
-                    .from("voluntarios")
-                    .select("*, refugio:refugio_id(name)")
-                    .eq("user_id", user.id)
-                    .single();
-
-                if (voluntarioData) {
-                    setVoluntario(voluntarioData);
-                }
+                return;
             }
-        });
+
+            // Busca refugio
+            const { data: refugioData } = await supabase
+                .from("refugios")
+                .select("*")
+                .eq("user_id", user.id)
+                .single();
+
+            if (refugioData) {
+                setUserType("refugio");
+                setUserData(refugioData);
+                setLoading(false);
+                return;
+            }
+
+            // Busca voluntario
+            const { data: voluntarioData } = await supabase
+                .from("voluntarios")
+                .select("*")
+                .eq("user_id", user.id)
+                .single();
+
+            if (voluntarioData) {
+                setUserType("voluntario");
+                setUserData(voluntarioData);
+                setLoading(false);
+                return;
+            }
+
+            // No encontrado ni refugio ni voluntario (¿error o usuario sin rol?)
+            setUserType(null);
+            setLoading(false);
+        }
+        fetchUser();
     }, [router]);
 
-    const handleLogout = async () => {
-        await supabase.auth.signOut();
-        router.push("/login");
-    };
+    if (loading) return <p className="text-center mt-10">Cargando dashboard...</p>;
 
-    // Render voluntario con chat integrado
-    if (voluntario) {
-        return (
-            <div className="min-h-screen bg-gradient-to-br from-green-200 via-blue-200 to-purple-100 p-10 relative">
-                <div className="bg-white/90 rounded-3xl shadow-2xl p-10 max-w-4xl mx-auto">
-                    <div className="flex justify-between items-center mb-4">
-                        <h1 className="text-3xl font-bold text-green-700">
-                            ¡Hola, {voluntario.name}!
-                        </h1>
-                        <NotificacionIcon
-                            voluntarioId={voluntario.id}
-                            onClick={() => setMostrarPanel(!mostrarPanel)}
-                        />
-                    </div>
+    if (!userType) return <p className="text-center mt-10 text-red-600">No tienes acceso al dashboard.</p>;
 
-                    {/* Panel de notificaciones (lista refugios con mensajes) */}
-                    {mostrarPanel && (
-                        <PanelNotificaciones
-                            voluntarioId={voluntario.id}
-                            onSeleccionarConversacion={(refugioId) => {
-                                setChatRefugioId(refugioId);
-                                setMostrarPanel(false);
-                            }}
-                        />
-                    )}
+    if (userType === "voluntario") return <DashboardVoluntario voluntario={userData} />;
 
+    if (userType === "refugio") return <DashboardRefugio refugio={userData} />;
 
-                    {/* Menú interno para voluntario */}
-                    {!chatRefugioId ? (
-                        <>
-                            <div className="flex gap-4 justify-center mb-6 mt-6">
-                                <button
-                                    onClick={() => setVista("tareas")}
-                                    className={`px-4 py-2 rounded-full font-bold transition ${vista === "tareas"
-                                        ? "bg-green-500 text-white"
-                                        : "bg-gray-200 text-gray-700"
-                                        }`}
-                                >
-                                    Mis tareas
-                                </button>
-                                <button
-                                    onClick={() => setVista("animales")}
-                                    className={`px-4 py-2 rounded-full font-bold transition ${vista === "animales"
-                                        ? "bg-purple-500 text-white"
-                                        : "bg-gray-200 text-gray-700"
-                                        }`}
-                                >
-                                    Animales
-                                </button>
-                                <button
-                                    onClick={() => setVista("chat")}
-                                    className={`px-4 py-2 rounded-full font-bold transition ${vista === "chat" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"
-                                        }`}
-                                >
-                                    Chat
-                                </button>
-                                <button
-                                    onClick={() => setVista("disponibilidad")}
-                                    className={`px-4 py-2 rounded-full font-bold transition ${vista === "disponibilidad" ? "bg-yellow-500 text-white" : "bg-gray-200 text-gray-700"
-                                        }`}
-                                >
-                                    Disponibilidad
-                                </button>
-
-                            </div>
-
-                            {/* Contenido dinámico */}
-                            {vista === "tareas" && <MisTareas />}
-                            {vista === "disponibilidad" && <MiDisponibilidad voluntarioId={voluntario.id} />}
-
-                            {vista === "animales" && <VoluntarioAnimales />}
-                            {vista === "chat" && (
-                                <ChatConversacion
-                                    refugioId={voluntario.refugio_id}
-                                    voluntarioId={voluntario.id}
-                                    remitente="voluntario"
-                                />
-
-                            )}
-
-
-
-                        </>
-                    ) : (
-                        <>
-                            <button
-                                onClick={() => setChatRefugioId(null)}
-                                className="mb-4 text-blue-600 underline"
-                            >
-                                ← Volver a notificaciones
-                            </button>
-                            <button
-                                onClick={() => setVista("disponibilidad")}
-                                className={`px-4 py-2 rounded-full font-bold transition ${vista === "disponibilidad"
-                                    ? "bg-yellow-500 text-white"
-                                    : "bg-gray-200 text-gray-700"
-                                    }`}
-                            >
-                                Disponibilidad
-                            </button>
-
-                            <ChatConversacion
-                                refugioId={chatRefugioId}
-                                voluntarioId={voluntario.id}
-                                remitente="voluntario"
-                            />
-                        </>
-                    )}
-
-                    <button
-                        onClick={handleLogout}
-                        className="mt-8 flex items-center gap-2 bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 hover:from-red-600 hover:via-pink-600 hover:to-purple-600 text-white px-5 py-2 rounded-xl font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
-                    >
-                        <FaSignOutAlt /> Cerrar sesión
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    if (!refugio) {
-        return (
-            <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-                <h2 className="text-xl font-semibold text-gray-800">
-                    Cargando dashboard...
-                </h2>
-            </div>
-        );
-    }
-
-    // Render para refugio
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-pink-100">
-            <nav className="w-full bg-white/80 shadow-2xl py-4 px-10 flex items-center justify-between fixed top-0 left-0 z-20 backdrop-blur-lg border-b-2 border-blue-200 animate-slide-down">
-                <div className="flex items-center gap-4">
-                    <FaHome className="text-blue-600 text-3xl drop-shadow" />
-                    <span className="text-2xl font-extrabold text-blue-700 tracking-wide drop-shadow-lg">
-                        RefuGest
-                    </span>
-                    <span className="ml-6 px-5 py-1 rounded-full bg-gradient-to-r from-yellow-300 via-yellow-400 to-yellow-500 text-black font-bold shadow text-lg border-2 border-yellow-200 animate-pulse">
-                        {refugio.name}
-                    </span>
-                </div>
-                <ul className="flex gap-8 items-center">
-                    <li>
-                        <Link
-                            href="/"
-                            className="flex items-center gap-2 text-blue-700 hover:text-pink-500 font-bold transition text-lg"
-                        >
-                            <FaHome /> Inicio
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            href="/dashboard/animales"
-                            className="flex items-center gap-2 text-purple-700 hover:text-pink-500 font-bold transition text-lg"
-                        >
-                            <FaPaw /> Animales
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            href="/dashboard/voluntarios"
-                            className="flex items-center gap-2 text-green-700 hover:text-pink-500 font-bold transition text-lg"
-                        >
-                            <FaHandsHelping /> Voluntarios
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            href="/dashboard/adoptantes"
-                            className="flex items-center gap-2 text-pink-700 hover:text-blue-500 font-bold transition text-lg"
-                        >
-                            <FaUsers /> Adoptantes
-                        </Link>
-                    </li>
-                    <li>
-                        <Link
-                            href="/dashboard/perfil"
-                            className="flex items-center gap-2 text-gray-700 hover:text-blue-500 font-bold transition text-lg"
-                        >
-                            <FaUserCircle /> Perfil
-                        </Link>
-                    </li>
-                </ul>
-                <button
-                    onClick={handleLogout}
-                    className="flex items-center gap-2 bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 hover:from-red-600 hover:via-pink-600 hover:to-purple-600 text-white px-5 py-2 rounded-xl font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
-                >
-                    <FaSignOutAlt /> Cerrar sesión
-                </button>
-            </nav>
-
-            <div className="h-24" />
-
-            <div className="flex flex-col items-center justify-center">
-                <div className="bg-white/90 rounded-3xl shadow-2xl p-10 mt-8 w-full max-w-2xl border-2 border-blue-200 animate-fade-in">
-                    <h1 className="text-4xl font-extrabold mb-2 text-blue-700 drop-shadow-lg">
-                        {refugio.name}
-                    </h1>
-                    <p className="mb-2 text-gray-900 text-lg">{refugio.description}</p>
-                    <p className="mb-2 text-gray-800">
-                        <span className="font-semibold">Ubicación:</span> {refugio.location}
-                    </p>
-                    <p className="mb-2 text-gray-800">
-                        <span className="font-semibold">Contacto:</span> {refugio.contact_info}
-                    </p>
-                    <p className="mt-4 text-gray-900 text-lg">
-                        ¡Bienvenido! Aquí podrás gestionar animales, voluntarios y adoptantes.
-                    </p>
-                    <Animales refugioId={refugio.id} />
-                    <DisponibilidadVoluntarios refugioId={refugio.id} />
-
-                </div>
-            </div>
-
-            <style jsx global>{`
-            @keyframes fade-in {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-            }
-            .animate-fade-in {
-            animation: fade-in 1s ease;
-            }
-            @keyframes slide-down {
-            from {
-                transform: translateY(-40px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-            }
-            .animate-slide-down {
-            animation: slide-down 0.8s cubic-bezier(0.4, 2, 0.6, 1) 0.1s both;
-            }
-        `}</style>
-        </div>
-    );
+    return null;
 }
