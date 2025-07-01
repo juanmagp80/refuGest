@@ -90,17 +90,38 @@ export default function RegisterPage() {
         });
 
         if (signUpError) {
-            setError(signUpError.message);
+            if (
+                signUpError.message.includes("invalid") &&
+                signUpError.message.includes(form.email)
+            ) {
+                setError(
+                    "Este correo electrónico ya está registrado. Intenta iniciar sesión o recuperar tu contraseña."
+                );
+            } else {
+                setError(signUpError.message);
+            }
             return;
         }
 
-        const user = signUpData.user;
-        if (!user) {
+
+        if (signUpData?.user) {
+            alert(
+                "Usuario creado correctamente. Por favor revisa tu correo para confirmar tu cuenta."
+            );
+        } else {
             setError("No se pudo crear el usuario.");
             return;
         }
 
-        let tableName = form.user_type === "refugio" ? "refugios" : form.user_type === "voluntario" ? "voluntarios" : "adoptantes";
+        const user = signUpData.user;
+
+        // Insertar en la tabla correspondiente
+        let tableName =
+            form.user_type === "refugio"
+                ? "refugios"
+                : form.user_type === "voluntario"
+                    ? "voluntarios"
+                    : "adoptantes";
 
         const insertData = {
             name: form.name,
@@ -112,9 +133,7 @@ export default function RegisterPage() {
         if (form.user_type === "refugio") insertData.location = form.provincia;
         if (form.user_type === "voluntario") insertData.refugio_id = form.refugio_id;
 
-        const { error: insertError } = await supabase
-            .from(tableName)
-            .insert([insertData]);
+        const { error: insertError } = await supabase.from(tableName).insert([insertData]);
 
         if (insertError) {
             setError(insertError.message);
@@ -123,6 +142,7 @@ export default function RegisterPage() {
 
         router.push("/dashboard");
     };
+
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 animate-fade-in">

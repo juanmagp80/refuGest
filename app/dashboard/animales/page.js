@@ -76,6 +76,13 @@ export default function ListaAnimalesPage() {
                 </Link>
             </div>
 
+            <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 mb-6 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-full font-bold shadow transition"
+            >
+                ⬅ Volver al dashboard
+            </Link>
+
             {error && <p className="text-red-600">{error}</p>}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
@@ -84,7 +91,18 @@ export default function ListaAnimalesPage() {
                         {animal.imagen && (
                             <img src={animal.imagen} alt={animal.name} className="w-full h-48 object-cover rounded mb-3" />
                         )}
-                        <h2 className="text-xl font-bold text-blue-600">{animal.name}</h2>
+                        <div className="flex items-center justify-between mb-2">
+                            <h2 className="text-xl font-bold text-blue-600">{animal.name}</h2>
+                            <span
+                                className={`text-xs font-semibold px-3 py-1 rounded-full
+                    ${animal.status === "Disponible" ? "bg-green-200 text-green-800" : ""}
+                    ${animal.status === "En espera" ? "bg-yellow-200 text-yellow-800" : ""}
+                    ${animal.status === "Adoptado" ? "bg-gray-300 text-gray-800" : ""}
+                `}
+                            >
+                                {animal.status}
+                            </span>
+                        </div>
                         <p className="text-gray-600">{animal.species} - {animal.breed}</p>
                         <p className="text-sm text-gray-500 mt-1">{animal.descripcion}</p>
                         <div className="flex justify-between mt-4 text-sm">
@@ -98,7 +116,6 @@ export default function ListaAnimalesPage() {
                     </div>
                 ))}
             </div>
-
             {animales.length === 0 && !error && (
                 <p className="text-center text-gray-500 mt-6">No hay animales registrados todavía.</p>
             )}

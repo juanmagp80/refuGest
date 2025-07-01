@@ -190,6 +190,15 @@ export default function HomePage() {
                 <div className="text-xl font-bold text-blue-700 text-center">{animal.name}</div>
                 <div className="text-purple-600 font-semibold text-center">{animal.breed}</div>
                 <div className="text-gray-600 text-center line-clamp-2">{animal.descripcion}</div>
+                <span
+                  className={`text-xs font-semibold px-3 py-1 rounded-full
+                    ${animal.status === "Disponible" ? "bg-green-200 text-green-800" : ""}
+                    ${animal.status === "En espera" ? "bg-yellow-200 text-yellow-800" : ""}
+                    ${animal.status === "Adoptado" ? "bg-gray-300 text-gray-800" : ""}
+                `}
+                >
+                  {animal.status}
+                </span>
                 <span className="absolute top-2 right-2 bg-gradient-to-br from-blue-400 to-purple-400 text-white px-2 py-1 rounded-full text-xs shadow font-bold opacity-80 group-hover:opacity-100 transition-opacity">
                   Más detalles
                 </span>
