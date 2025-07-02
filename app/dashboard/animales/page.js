@@ -148,14 +148,7 @@ export default function ListaAnimalesPage() {
                             </div>
                         )}
 
-                        <div className="flex justify-between mt-4 text-sm">
-                            <Link href={`/dashboard/animales/${animal.id}`} className="text-yellow-600 hover:underline flex items-center gap-1">
-                                <FaEdit /> Editar
-                            </Link>
-                            <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:underline flex items-center gap-1">
-                                <FaTrash /> Borrar
-                            </button>
-                        </div>
+
                     </div>
                 ))}
             </div>

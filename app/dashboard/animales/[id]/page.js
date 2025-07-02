@@ -106,6 +106,25 @@ export default function EditarAnimalPage() {
                     Esterilizado
                 </label>
 
+                {/* Select para cambiar el estado */}
+                <div className="relative w-full">
+                    <span className="absolute left-3 top-3 text-blue-400">
+                        <FaInfoCircle />
+                    </span>
+                    <select
+                        name="status"
+                        value={form.status || ""}
+                        onChange={handleChange}
+                        className="text-black border-2 border-blue-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-full"
+                    >
+                        <option value="">Selecciona un estado</option>
+                        <option value="Disponible">Disponible</option>
+                        <option value="Adoptado">Adoptado</option>
+                        <option value="En tratamiento">En tratamiento</option>
+                        <option value="Reservado">Reservado</option>
+                    </select>
+                </div>
+
                 <button
                     type="button"
                     onClick={openCloudinaryWidget}
