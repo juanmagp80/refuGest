@@ -1,9 +1,12 @@
 "use client";
 
+import GestionSolicitudesAdopcion from "@/components/GestionSolicitudesAdopcion";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+    FaClipboardList // icono para solicitudes
+    ,
     FaHandsHelping,
     FaPaw,
     FaSignOutAlt,
@@ -115,6 +118,10 @@ export default function DashboardRefugio({ refugio }) {
                         <p><strong>Contacto:</strong> {refugio.contact_info}</p>
                     </div>
                 );
+            case "solicitudes":
+                return (
+                    <GestionSolicitudesAdopcion refugioId={refugio.id} />
+                );
             default:
                 return null;
         }
@@ -148,6 +155,12 @@ export default function DashboardRefugio({ refugio }) {
                         className="flex items-center gap-2 px-6 py-3 rounded-full font-semibold bg-gray-200 text-gray-700 hover:bg-green-300 transition text-lg shadow-md"
                     >
                         <FaHandsHelping /> Voluntarios
+                    </button>
+                    <button
+                        onClick={() => setVista("solicitudes")}
+                        className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition text-lg shadow-md ${vista === "solicitudes" ? "bg-yellow-500 text-white" : "bg-gray-200 text-gray-700 hover:bg-yellow-300"}`}
+                    >
+                        <FaClipboardList /> Solicitudes de adopción
                     </button>
                     <button
                         onClick={() => setVista("perfil")}

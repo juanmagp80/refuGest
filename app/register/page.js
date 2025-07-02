@@ -28,6 +28,7 @@ export default function RegisterPage() {
     const [error, setError] = useState(null);
     const [refugios, setRefugios] = useState([]);
     const [animales, setAnimales] = useState([]);  // Estado para almacenar los animales cargados
+    const [popup, setPopup] = useState({ visible: false, type: "", message: "" });
 
     const provincias = [
         "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz",
@@ -90,24 +91,19 @@ export default function RegisterPage() {
         });
 
         if (signUpError) {
-            if (
-                signUpError.message.includes("invalid") &&
-                signUpError.message.includes(form.email)
-            ) {
-                setError(
-                    "Este correo electrónico ya está registrado. Intenta iniciar sesión o recuperar tu contraseña."
-                );
-            } else {
-                setError(signUpError.message);
-            }
+            const msg = signUpError.message.includes("invalid") && signUpError.message.includes(form.email)
+                ? "Este correo electrónico ya está registrado. Intenta iniciar sesión o recuperar tu contraseña."
+                : signUpError.message;
+
+            mostrarPopup("error", msg);
             return;
         }
 
 
+
         if (signUpData?.user) {
-            alert(
-                "Usuario creado correctamente. Por favor revisa tu correo para confirmar tu cuenta."
-            );
+            mostrarPopup("success", "Usuario creado correctamente. Revisa tu correo para confirmar la cuenta.");
+
         } else {
             setError("No se pudo crear el usuario.");
             return;
@@ -136,16 +132,32 @@ export default function RegisterPage() {
         const { error: insertError } = await supabase.from(tableName).insert([insertData]);
 
         if (insertError) {
-            setError(insertError.message);
+            mostrarPopup("error", insertError.message);
             return;
         }
 
         router.push("/dashboard");
     };
+    const mostrarPopup = (tipo, mensaje) => {
+        setPopup({ visible: true, type: tipo, message: mensaje });
+
+        setTimeout(() => {
+            setPopup({ visible: false, type: "", message: "" });
+        }, 4000); // Se cierra solo tras 4s
+    };
 
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 animate-fade-in">
+            {popup.visible && (
+                <div
+                    className={`fixed top-6 left-1/2 transform -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-xl text-white text-center font-semibold transition-all duration-300 ${popup.type === "success" ? "bg-green-500" : "bg-red-500"
+                        }`}
+                >
+                    {popup.message}
+                </div>
+            )}
+
             <form
                 onSubmit={handleSubmit}
                 className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-10 w-full max-w-md flex flex-col gap-6 border-2 border-blue-200 animate-slide-up"

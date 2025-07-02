@@ -12,6 +12,8 @@ export default function ListaAnimalesPage() {
     const [refugio, setRefugio] = useState(null);
     const [error, setError] = useState(null);
     const router = useRouter();
+    const [adoptante, setAdoptante] = useState(null);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -21,35 +23,65 @@ export default function ListaAnimalesPage() {
                 return;
             }
 
-            const { data: refugio, error: refugioError } = await supabase
+            // ¿Es un refugio?
+            const { data: refugioData } = await supabase
                 .from("refugios")
                 .select("id, name")
                 .eq("user_id", user.id)
                 .single();
 
-            if (refugioError || !refugio) {
-                setError("Refugio no encontrado.");
+            if (refugioData) {
+                setRefugioId(refugioData.id);
+                setRefugio(refugioData);
+
+                const { data: animalesData, error: animalesError } = await supabase
+                    .from("animales")
+                    .select("*")
+                    .eq("refugio_id", refugioData.id)
+                    .order("created_at", { ascending: false });
+
+                if (animalesError) {
+                    setError(animalesError.message);
+                } else {
+                    setAnimales(animalesData);
+                }
+
                 return;
             }
 
-            setRefugioId(refugio.id);
-            setRefugio(refugio);
+            // ¿Es adoptante?
+            const { data: adoptanteData } = await supabase
+                .from("adoptantes")
+                .select("name")
+                .eq("user_id", user.id)
+                .single();
 
-            const { data: animalesData, error: animalesError } = await supabase
-                .from("animales")
-                .select("*")
-                .eq("refugio_id", refugio.id)
-                .order("created_at", { ascending: false });
+            if (adoptanteData) {
+                setAdoptante(adoptanteData);
 
-            if (animalesError) {
-                setError(animalesError.message);
-            } else {
-                setAnimales(animalesData);
+                // Cargar todos los animales disponibles (para que pueda verlos)
+                const { data: animalesDisponibles, error: animalesError } = await supabase
+                    .from("animales")
+                    .select("*")
+                    .eq("status", "Disponible")
+                    .order("created_at", { ascending: false });
+
+                if (animalesError) {
+                    setError(animalesError.message);
+                } else {
+                    setAnimales(animalesDisponibles);
+                }
+
+                return;
             }
+
+            // Si no es ni refugio ni adoptante
+            setError("No tienes permisos para ver esta página.");
         };
 
         fetchData();
     }, [router]);
+
 
     const handleDelete = async (id) => {
         if (confirm("¿Estás seguro de que quieres borrar este animal?")) {
@@ -105,6 +137,17 @@ export default function ListaAnimalesPage() {
                         </div>
                         <p className="text-gray-600">{animal.species} - {animal.breed}</p>
                         <p className="text-sm text-gray-500 mt-1">{animal.descripcion}</p>
+                        {refugio && (
+                            <div className="flex justify-between mt-4 text-sm">
+                                <Link href={`/dashboard/animales/${animal.id}`} className="text-yellow-600 hover:underline flex items-center gap-1">
+                                    <FaEdit /> Editar
+                                </Link>
+                                <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:underline flex items-center gap-1">
+                                    <FaTrash /> Borrar
+                                </button>
+                            </div>
+                        )}
+
                         <div className="flex justify-between mt-4 text-sm">
                             <Link href={`/dashboard/animales/${animal.id}`} className="text-yellow-600 hover:underline flex items-center gap-1">
                                 <FaEdit /> Editar
