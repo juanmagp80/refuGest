@@ -34,6 +34,7 @@ export default function NuevoAnimalPage() {
         veterinario: "",
         observaciones: "",
         imagen: "",
+        status: "",
     });
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
@@ -150,6 +151,20 @@ export default function NuevoAnimalPage() {
                     />
                     Esterilizado
                 </label>
+                <select
+                    name="status"
+                    value={form.status || ""}
+                    onChange={handleChange}
+                    className="text-black border-2 border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-full"
+                    required
+                >
+                    <option value="" disabled>
+                        Selecciona el estado del animal
+                    </option>
+                    <option value="Disponible">Disponible para adopción</option>
+                    <option value="Adoptado">Adoptado</option>
+                    <option value="En espera">En espera</option>
+                </select>
 
                 <button
                     type="button"
