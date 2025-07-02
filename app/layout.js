@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono, Poppins } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
-
 // Define your Poppins font configuration
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -30,7 +30,8 @@ export default function RootLayout({ children }) {
       <body
         className={`${poppins.variable} ${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+
+        <Script src="some-external.js" strategy="lazyOnload" />
         {children}
       </body>
     </html>
