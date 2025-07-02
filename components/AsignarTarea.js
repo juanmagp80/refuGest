@@ -11,7 +11,6 @@ export default function AsignarTarea({ voluntarioId }) {
 
     const [mensaje, setMensaje] = useState(null);
 
-    // Log voluntarioId para debug
     useEffect(() => {
         console.log("voluntarioId recibido en AsignarTarea:", voluntarioId);
     }, [voluntarioId]);
@@ -28,13 +27,6 @@ export default function AsignarTarea({ voluntarioId }) {
             return;
         }
 
-        console.log("Insertando tarea con datos:", {
-            volunteer_id: voluntarioId,
-            task_name: form.task_name,
-            description: form.description,
-            assigned_at: new Date().toISOString()
-        });
-
         const { data, error } = await supabase
             .from("tareas_voluntarios")
             .insert([{
@@ -42,10 +34,8 @@ export default function AsignarTarea({ voluntarioId }) {
                 task_name: form.task_name,
                 description: form.description,
                 assigned_at: new Date().toISOString(),
-                status: "Pendiente" // 👈 Usa el valor exacto
+                status: "Pendiente"
             }]);
-
-        console.log("Respuesta de insert:", { data, error });
 
         if (error) {
             console.error("Error al asignar tarea:", error);
@@ -57,43 +47,50 @@ export default function AsignarTarea({ voluntarioId }) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="mt-4 bg-white p-6 rounded-lg shadow-md border border-gray-300">
-            <h3 className="text-lg font-semibold mb-4 text-indigo-700">Asignar nueva tarea</h3>
+        <form
+            onSubmit={handleSubmit}
+            className="mt-6 bg-white p-4 sm:p-6 rounded-xl shadow-md border border-gray-200 w-full max-w-md mx-auto"
+        >
+            <h3 className="text-xl font-bold mb-4 text-indigo-700 text-center">Asignar nueva tarea</h3>
 
             <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-1">Título de la tarea</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Título de la tarea
+                </label>
                 <input
                     type="text"
                     name="task_name"
                     value={form.task_name}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     placeholder="Ej. Pasear perros"
                     required
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
             </div>
 
             <div className="mb-4">
-                <label className="block text-gray-700 font-medium mb-1">Descripción</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Descripción
+                </label>
                 <textarea
                     name="description"
                     value={form.description}
                     onChange={handleChange}
-                    className="w-full border border-gray-300 px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     rows={3}
-                    placeholder="Ej. Pasear a los perros de la zona B del refugio durante 30 minutos"
+                    placeholder="Ej. Pasear a los perros de la zona B durante 30 minutos"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
             </div>
 
             <button
                 type="submit"
-                className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-md font-bold transition-all duration-200"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-md text-sm transition"
             >
                 Asignar tarea
             </button>
 
             {mensaje && (
-                <p className={`mt-3 text-sm ${mensaje.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>
+                <p className={`mt-4 text-sm text-center ${mensaje.startsWith("✅") ? "text-green-600" : "text-red-600"}`}>
                     {mensaje}
                 </p>
             )}

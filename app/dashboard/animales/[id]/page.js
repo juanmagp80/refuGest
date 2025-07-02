@@ -70,22 +70,24 @@ export default function EditarAnimalPage() {
         );
     };
 
-    if (loading) return <p className="p-8">Cargando...</p>;
-    if (!form) return <p className="p-8 text-red-600">{error || "Animal no encontrado"}</p>;
+    if (loading) return <p className="p-8 text-center">Cargando...</p>;
+    if (!form) return <p className="p-8 text-center text-red-600">{error || "Animal no encontrado"}</p>;
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-pink-100 animate-fade-in">
+        <div className="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-pink-100 animate-fade-in p-4 flex items-center justify-center">
             <form
                 onSubmit={handleSubmit}
-                className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-10 w-full max-w-2xl flex flex-col gap-6 border-2 border-blue-200 animate-slide-up"
+                className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-6 w-full max-w-lg flex flex-col gap-6 border-2 border-blue-200 animate-slide-up"
             >
                 <div className="flex flex-col items-center mb-4">
                     <div className="flex items-center gap-2 text-4xl text-yellow-600 drop-shadow-lg">
                         <FaDog />
                         <FaCat />
                     </div>
-                    <h1 className="text-3xl font-extrabold mt-2 text-blue-700 tracking-tight drop-shadow-lg">Editar animal</h1>
-                    <p className="text-gray-500 text-sm mt-1">Actualiza los datos del animal</p>
+                    <h1 className="text-2xl sm:text-3xl font-extrabold mt-2 text-blue-700 tracking-tight drop-shadow-lg text-center">
+                        Editar animal
+                    </h1>
+                    <p className="text-gray-500 text-sm mt-1 text-center">Actualiza los datos del animal</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,7 +101,7 @@ export default function EditarAnimalPage() {
                     <Input name="veterinario" icon={<FaUserMd />} placeholder="Veterinario" value={form.veterinario} onChange={handleChange} />
                 </div>
 
-                <label className="flex items-center gap-2 text-black font-medium">
+                <label className="flex items-center gap-3 text-black font-medium">
                     <input type="checkbox" name="esterilizado" checked={form.esterilizado} onChange={handleChange} className="accent-blue-600 scale-125" />
                     Esterilizado
                 </label>
@@ -117,7 +119,7 @@ export default function EditarAnimalPage() {
                         <img
                             src={form.imagen}
                             alt="Imagen del animal"
-                            className="w-32 h-32 object-cover rounded-full border-4 border-blue-300 shadow-lg mt-2"
+                            className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-full border-4 border-blue-300 shadow-lg mt-2"
                         />
                     </div>
                 )}
@@ -128,8 +130,8 @@ export default function EditarAnimalPage() {
                 <TextArea name="tratamientos" icon={<FaNotesMedical />} placeholder="Tratamientos" value={form.tratamientos} onChange={handleChange} />
                 <TextArea name="observaciones" icon={<FaInfoCircle />} placeholder="Observaciones" value={form.observaciones} onChange={handleChange} />
 
-                {error && <p className="text-red-600">{error}</p>}
-                {success && <p className="text-green-600 flex items-center gap-2"><FaCheckCircle /> {success}</p>}
+                {error && <p className="text-red-600 text-center">{error}</p>}
+                {success && <p className="text-green-600 flex items-center gap-2 justify-center"><FaCheckCircle /> {success}</p>}
 
                 <button
                     type="submit"
@@ -162,7 +164,7 @@ export default function EditarAnimalPage() {
 
 function Input({ name, icon, ...props }) {
     return (
-        <div className="relative">
+        <div className="relative w-full">
             <span className="absolute left-3 top-3 text-blue-400">{icon}</span>
             <input
                 name={name}
@@ -175,7 +177,7 @@ function Input({ name, icon, ...props }) {
 
 function TextArea({ name, icon, ...props }) {
     return (
-        <div className="relative">
+        <div className="relative w-full">
             <span className="absolute left-3 top-3 text-blue-400">{icon}</span>
             <textarea
                 name={name}

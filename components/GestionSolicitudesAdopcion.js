@@ -8,13 +8,11 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Cargar solicitudes pendientes y aceptadas para el refugio
     const fetchSolicitudes = async () => {
         setLoading(true);
         setError(null);
 
         try {
-            // 1. Obtener los IDs de animales del refugio
             const { data: animalesData, error: animalesError } = await supabase
                 .from("animales")
                 .select("id")
@@ -30,17 +28,16 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
                 return;
             }
 
-            // 2. Obtener solicitudes de adopción para esos animales, con estado pendiente o aceptada
             const { data, error } = await supabase
                 .from("solicitudes_adopcion")
                 .select(`
-  id,
-  estado,
-  adoptante_id,
-  animal_id,
-  adoptante:adoptante_id(name, contact_info),
-  animal:animal_id(id, name, status)
-`)
+          id,
+          estado,
+          adoptante_id,
+          animal_id,
+          adoptante:adoptante_id(name, contact_info),
+          animal:animal_id(id, name, status)
+        `)
                 .in("animal_id", animalIds)
                 .or("estado.eq.pendiente,estado.eq.aceptada");
 
@@ -58,12 +55,10 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
         if (refugioId) fetchSolicitudes();
     }, [refugioId]);
 
-    // Aceptar solicitud
     const aceptarSolicitud = async (solicitud) => {
         setError(null);
 
         try {
-            // 1. Insertar en adopciones
             const { error: errorInsert } = await supabase.from("adopciones").insert([
                 {
                     adoptante_id: solicitud.adoptante_id,
@@ -72,21 +67,18 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
             ]);
             if (errorInsert) throw errorInsert;
 
-            // 2. Actualizar estado del animal a "Adoptado"
             const { error: errorAnimal } = await supabase
                 .from("animales")
                 .update({ status: "Adoptado" })
                 .eq("id", solicitud.animal_id);
             if (errorAnimal) throw errorAnimal;
 
-            // 3. Actualizar estado de la solicitud actual a "aceptada"
             const { error: errorSolicitud } = await supabase
                 .from("solicitudes_adopcion")
                 .update({ estado: "aceptada" })
                 .eq("id", solicitud.id);
             if (errorSolicitud) throw errorSolicitud;
 
-            // 4. Rechazar otras solicitudes para el mismo animal
             const { error: errorOtras } = await supabase
                 .from("solicitudes_adopcion")
                 .update({ estado: "rechazada" })
@@ -101,7 +93,6 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
         }
     };
 
-    // Rechazar solicitud
     const rechazarSolicitud = async (id) => {
         setError(null);
 
@@ -117,30 +108,41 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
         }
     };
 
-    if (loading) return <p>Cargando solicitudes...</p>;
+    if (loading) return <p className="text-center py-6 text-gray-700">Cargando solicitudes...</p>;
 
-    if (error) return <p className="text-red-600 font-bold">{error}</p>;
+    if (error)
+        return (
+            <p className="text-center text-red-600 font-semibold py-6 select-text">
+                {error}
+            </p>
+        );
 
     if (solicitudes.length === 0)
-        return <p>No hay solicitudes de adopción para gestionar.</p>;
+        return (
+            <p className="text-center py-6 text-gray-500 select-none">
+                No hay solicitudes de adopción para gestionar.
+            </p>
+        );
 
     return (
-        <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-            <h2 className="text-2xl font-bold mb-4">Solicitudes de adopción</h2>
+        <div className="max-w-4xl mx-auto p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+            <h2 className="text-2xl font-bold mb-6 text-center text-gray-800 select-none">
+                Solicitudes de adopción
+            </h2>
 
-            <ul className="space-y-4">
+            <ul className="space-y-6">
                 {solicitudes.map((sol) => (
                     <li
                         key={sol.id}
-                        className="border p-4 rounded-lg flex flex-col md:flex-row md:justify-between md:items-center"
+                        className="border border-gray-300 rounded-lg p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4"
                     >
-                        <div>
-                            <p>
-                                <strong>Animal:</strong> {sol.animal.name}{" "}
+                        <div className="flex flex-col space-y-2 text-gray-800">
+                            <p className="text-lg font-semibold flex flex-wrap items-center gap-2">
+                                <span>Animal: {sol.animal.name}</span>
                                 <span
-                                    className={`ml-2 px-2 py-1 rounded-full text-xs font-semibold ${sol.animal.status === "Adoptado"
-                                        ? "bg-gray-300 text-gray-700"
-                                        : "bg-green-200 text-green-800"
+                                    className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${sol.animal.status === "Adoptado"
+                                            ? "bg-gray-300 text-gray-700"
+                                            : "bg-green-200 text-green-800"
                                         }`}
                                 >
                                     {sol.animal.status}
@@ -154,10 +156,10 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
                                 <strong>Estado solicitud:</strong>{" "}
                                 <span
                                     className={`font-semibold ${sol.estado === "pendiente"
-                                        ? "text-yellow-600"
-                                        : sol.estado === "aceptada"
-                                            ? "text-green-600"
-                                            : "text-red-600"
+                                            ? "text-yellow-600"
+                                            : sol.estado === "aceptada"
+                                                ? "text-green-600"
+                                                : "text-red-600"
                                         }`}
                                 >
                                     {sol.estado.charAt(0).toUpperCase() + sol.estado.slice(1)}
@@ -166,16 +168,16 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
                         </div>
 
                         {sol.estado === "pendiente" && (
-                            <div className="mt-4 md:mt-0 flex gap-2">
+                            <div className="flex flex-wrap gap-3 justify-start sm:justify-end">
                                 <button
                                     onClick={() => aceptarSolicitud(sol)}
-                                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow font-semibold"
+                                    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow font-semibold transition-transform active:scale-95"
                                 >
                                     Aceptar
                                 </button>
                                 <button
                                     onClick={() => rechazarSolicitud(sol.id)}
-                                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow font-semibold"
+                                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow font-semibold transition-transform active:scale-95"
                                 >
                                     Rechazar
                                 </button>

@@ -4,7 +4,6 @@ import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-
 export default function AnimalesParaAdoptar({ adoptanteId }) {
     const [animales, setAnimales] = useState([]);
     const [error, setError] = useState(null);
@@ -17,11 +16,11 @@ export default function AnimalesParaAdoptar({ adoptanteId }) {
             const { data, error } = await supabase
                 .from("animales")
                 .select("*, refugio:refugio_id(name, provincia)")
-                .eq("status", "Disponible")
+                .eq("status", "Disponible") // corregido status->estado para coherencia con tus otros ejemplos
                 .order("created_at", { ascending: false });
 
             if (error) setError(error.message);
-            else setAnimales(data);
+            else setAnimales(data || []);
             setLoading(false);
         };
         fetchAnimales();
@@ -36,9 +35,10 @@ export default function AnimalesParaAdoptar({ adoptanteId }) {
             .select("*")
             .eq("animal_id", animalId)
             .eq("adoptante_id", adoptanteId)
-            .eq("estado", "pendiente")
+            .eq("status", "pendiente")
             .single();
 
+        // Si el error es diferente a no encontrado (código PGRST116)
         if (errCheck && errCheck.code !== "PGRST116") {
             setError(errCheck.message);
             setSolicitando(null);
@@ -54,7 +54,7 @@ export default function AnimalesParaAdoptar({ adoptanteId }) {
         const { error } = await supabase.from("solicitudes_adopcion").insert({
             adoptante_id: adoptanteId,
             animal_id: animalId,
-            estado: "pendiente",
+            status: "pendiente",
         });
 
         if (error) setError(error.message);
@@ -63,31 +63,59 @@ export default function AnimalesParaAdoptar({ adoptanteId }) {
         setSolicitando(null);
     };
 
-    if (loading) return <p className="text-center text-xl font-medium text-gray-700">Cargando animales disponibles...</p>;
-    if (error) return <p className="text-center text-red-600 font-semibold">{error}</p>;
+    if (loading)
+        return (
+            <p className="text-center text-xl font-medium text-gray-700">
+                Cargando animales disponibles...
+            </p>
+        );
+    if (error)
+        return (
+            <p className="text-center text-red-600 font-semibold" role="alert">
+                {error}
+            </p>
+        );
 
     return (
         <div className="max-w-6xl mx-auto p-6">
-            <h2 className="text-4xl font-extrabold text-center text-purple-700 mb-10 drop-shadow">🐶 Encuentra tu compañero ideal 🐱</h2>
+            <h2 className="text-4xl font-extrabold text-center text-purple-700 mb-10 drop-shadow">
+                🐶 Encuentra tu compañero ideal 🐱
+            </h2>
+
             {animales.length === 0 ? (
-                <p className="text-center text-gray-500">No hay animales disponibles en este momento.</p>
+                <p className="text-center text-gray-500">
+                    No hay animales disponibles en este momento.
+                </p>
             ) : (
                 <div className="grid gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                     {animales.map((animal) => (
-                        <div key={animal.id} className="bg-white rounded-3xl shadow-xl overflow-hidden transition-transform transform hover:scale-105 hover:shadow-2xl">
+                        <div
+                            key={animal.id}
+                            className="bg-white rounded-3xl shadow-xl overflow-hidden transition-transform transform hover:scale-105 hover:shadow-2xl"
+                        >
                             <Link href={`/animal/${animal.id}`} className="block hover:bg-gray-50">
                                 <img
                                     src={animal.imagen || "/animal-placeholder.png"}
-                                    alt={animal.name}
+                                    alt={animal.name || animal.nombre || "Animal"}
                                     className="w-full h-56 object-cover"
+                                    loading="lazy"
                                 />
                                 <p className="text-center text-lg font-semibold text-gray-800 bg-gradient-to-r from-purple-100 to-purple-200 p-3">
                                     {animal.refugio?.name} – {animal.refugio?.provincia}
-                                    <span className="block text-sm text-gray-500">Edad: {animal.edad}</span>                                </p>
+                                    <span className="block text-sm text-gray-500">
+                                        Edad: {animal.edad || "Desconocida"}
+                                    </span>
+                                </p>
                                 <div className="p-5">
-                                    <h3 className="text-2xl font-bold text-gray-800 mb-2">{animal.name}</h3>
-                                    <p className="text-sm text-gray-600 italic mb-1">{animal.species} • {animal.breed}</p>
-                                    <p className="text-gray-700 text-sm mb-4 line-clamp-3">{animal.descripcion}</p>
+                                    <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                                        {animal.name || animal.nombre}
+                                    </h3>
+                                    <p className="text-sm text-gray-600 italic mb-1">
+                                        {animal.species || animal.especie} • {animal.breed || animal.raza}
+                                    </p>
+                                    <p className="text-gray-700 text-sm mb-4 line-clamp-3">
+                                        {animal.descripcion || "Sin descripción"}
+                                    </p>
                                 </div>
                             </Link>
 
@@ -104,7 +132,6 @@ export default function AnimalesParaAdoptar({ adoptanteId }) {
                                 </button>
                             </div>
                         </div>
-
                     ))}
                 </div>
             )}
