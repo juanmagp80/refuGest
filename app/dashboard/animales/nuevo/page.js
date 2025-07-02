@@ -2,7 +2,7 @@
 
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     FaCalendarAlt,
     FaCat,
@@ -38,11 +38,28 @@ export default function NuevoAnimalPage() {
     });
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
+    const [cloudinaryReady, setCloudinaryReady] = useState(false);
+
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setForm({ ...form, [name]: type === "checkbox" ? checked : value });
     };
+    useEffect(() => {
+        if (window.cloudinary?.createUploadWidget || window.cloudinary?.openUploadWidget) {
+            setCloudinaryReady(true);
+        } else {
+            const checkCloudinary = setInterval(() => {
+                if (window.cloudinary?.createUploadWidget || window.cloudinary?.openUploadWidget) {
+                    setCloudinaryReady(true);
+                    clearInterval(checkCloudinary);
+                }
+            }, 300);
+
+            return () => clearInterval(checkCloudinary);
+        }
+    }, []);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -79,8 +96,12 @@ export default function NuevoAnimalPage() {
             setTimeout(() => router.push("/dashboard/animales"), 1500);
         }
     };
-
     const openCloudinaryWidget = () => {
+        if (typeof window === "undefined" || !window.cloudinary) {
+            setError("El widget aún se está cargando. Intenta de nuevo en unos segundos.");
+            return;
+        }
+
         window.cloudinary.openUploadWidget(
             {
                 cloudName: "dmx84o0ye",
@@ -92,7 +113,7 @@ export default function NuevoAnimalPage() {
             },
             (error, result) => {
                 if (!error && result && result.event === "success") {
-                    setForm({ ...form, imagen: result.info.secure_url });
+                    setForm((prev) => ({ ...prev, imagen: result.info.secure_url }));
                 }
             }
         );
@@ -169,10 +190,16 @@ export default function NuevoAnimalPage() {
                 <button
                     type="button"
                     onClick={openCloudinaryWidget}
-                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded font-bold shadow transition-all duration-200"
+                    disabled={!cloudinaryReady}
+                    className={`${cloudinaryReady
+                            ? "bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600"
+                            : "bg-gray-300 cursor-not-allowed"
+                        } text-white px-4 py-2 rounded font-bold shadow transition-all duration-200`}
                 >
-                    Subir imagen
+                    {cloudinaryReady ? "Subir imagen" : "Cargando widget..."}
                 </button>
+
+
 
                 {form.imagen && (
                     <div className="flex justify-center">

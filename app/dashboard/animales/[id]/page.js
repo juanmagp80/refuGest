@@ -120,8 +120,7 @@ export default function EditarAnimalPage() {
                         <option value="">Selecciona un estado</option>
                         <option value="Disponible">Disponible</option>
                         <option value="Adoptado">Adoptado</option>
-                        <option value="En tratamiento">En tratamiento</option>
-                        <option value="Reservado">Reservado</option>
+                        <option value="En espera">En espera</option>
                     </select>
                 </div>
 

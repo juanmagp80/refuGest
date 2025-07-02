@@ -19,44 +19,58 @@ export default function DashboardRefugio({ refugio }) {
     const [tareasCompletadas, setTareasCompletadas] = useState([]);
     const [vista, setVista] = useState("inicio");
     const [loading, setLoading] = useState(true);
-
     useEffect(() => {
-        async function fetchData() {
-            setLoading(true);
-            const { data: voluntariosData } = await supabase
-                .from("voluntarios")
-                .select("id, name, created_at")
-                .eq("refugio_id", refugio.id)
-                .order("created_at", { ascending: false })
-                .limit(5);
+        const fetchAnimales = async () => {
+            try {
+                const {
+                    data: { user },
+                    error: userError,
+                } = await supabase.auth.getUser();
 
-            const { data: animalesData } = await supabase
-                .from("animales")
-                .select("id, nombre, especie, foto_url, created_at")
-                .eq("refugio_id", refugio.id)
-                .order("created_at", { ascending: false })
-                .limit(5);
+                if (userError || !user) {
+                    console.error("Error obteniendo usuario o no está logueado", userError);
+                    return;
+                }
 
-            const { data: tareasData } = await supabase
-                .from("tareas_voluntarios")
-                .select("id, titulo, estado, updated_at")
-                .eq("refugio_id", refugio.id)
-                .eq("estado", "completada")
-                .order("updated_at", { ascending: false })
-                .limit(5);
+                const { data: refugio, error: refugioError } = await supabase
+                    .from("refugios")
+                    .select("id")
+                    .eq("user_id", user.id)
+                    .single();
 
-            setVoluntarios(voluntariosData || []);
-            setAnimales(animalesData || []);
-            setTareasCompletadas(tareasData || []);
-            setLoading(false);
-        }
-        fetchData();
-    }, [refugio.id]);
+                if (refugioError || !refugio) {
+                    console.error("No se encontró refugio para el usuario", refugioError);
+                    return;
+                }
+
+                const { data: animalesData, error: animalesError } = await supabase
+                    .from("animales")
+                    .select("*")
+                    .eq("refugio_id", refugio.id)
+                    .order("created_at", { ascending: false });
+
+                if (animalesError) {
+                    console.error("Error cargando animales", animalesError);
+                } else {
+                    console.log("Animales cargados:", animalesData);
+                    setAnimales(animalesData);
+                }
+            } catch (e) {
+                console.error("Error en fetchAnimales:", e);
+            } finally {
+                setLoading(false);  // <--- Aquí, para que pase a mostrar la UI real
+            }
+        };
+
+        fetchAnimales();
+    }, []);
+
 
     const handleLogout = async () => {
         await supabase.auth.signOut();
         router.push("/login");
     };
+    console.log("Animales recibidos:", animales);
 
     const renderVista = () => {
         switch (vista) {
@@ -69,18 +83,18 @@ export default function DashboardRefugio({ refugio }) {
                                 {animales.length === 0 ? (
                                     <p className="text-center col-span-full text-gray-500 italic">No hay animales registrados aún.</p>
                                 ) : (
-                                    animales.map((a) => (
+                                    animales.slice(0, 6).map((a) => (
                                         <div
                                             key={a.id}
                                             className="bg-purple-100 border border-purple-300 rounded-xl p-4 shadow-lg flex items-center gap-4"
                                         >
                                             <img
-                                                src={a.foto_url || "/animal-placeholder.png"}
-                                                alt={a.nombre}
+                                                src={a.imagen || "/animal-placeholder.png"}
+                                                alt={a.name}
                                                 className="w-20 h-20 object-cover rounded-full border-4 border-purple-300 shadow-md"
                                             />
                                             <div>
-                                                <h3 className="text-xl font-bold text-purple-700">{a.nombre}</h3>
+                                                <h3 className="text-xl font-bold text-purple-700">{a.name}</h3>
                                                 <p className="text-purple-900">{a.especie}</p>
                                             </div>
                                         </div>
