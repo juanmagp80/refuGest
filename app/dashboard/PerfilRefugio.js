@@ -16,12 +16,72 @@ function PerfilRefugio({ refugio, setRefugio }) {
     });
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState(null);
+    const [selectedLogo, setSelectedLogo] = useState(null);
+    const [selectedBanner, setSelectedBanner] = useState(null);
+    const [uploadingLogo, setUploadingLogo] = useState(false);
+    const [uploadingBanner, setUploadingBanner] = useState(false);
+
+    const handleUploadImage = async (file, tipo) => {
+        if (!file) return;
+
+        const setUploading = tipo === "logo" ? setUploadingLogo : setUploadingBanner;
+        setUploading(true);
+
+        const nombreArchivo = `${tipo}-${refugio.id}-${Date.now()}`;
+
+        const { data, error } = await supabase.storage
+            .from("images")
+            .upload(nombreArchivo, file, {
+                cacheControl: "3600",
+                upsert: true,
+            });
+
+        if (error) {
+            setMsg({ type: "error", text: `Error al subir ${tipo}: ` + error.message });
+            setUploading(false);
+            return;
+        }
+
+        const { data: urlData } = supabase.storage
+            .from("images")
+            .getPublicUrl(nombreArchivo);
+
+        if (urlData?.publicUrl) {
+            setFormData((f) => ({
+                ...f,
+                [`${tipo}_url`]: urlData.publicUrl,
+            }));
+            setMsg({ type: "success", text: `${tipo === "logo" ? "Logo" : "Banner"} actualizado correctamente.` });
+        }
+
+        setUploading(false);
+    };
 
     // Para simplificar, solo haremos inputs tipo texto. Puedes mejorar luego.
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((f) => ({ ...f, [name]: value }));
+    };
+    const subirImagen = async (file, tipo) => {
+        const nombreArchivo = `${tipo}-${refugio.id}-${Date.now()}`;
+
+        const { data, error } = await supabase.storage
+            .from("refugio-images") // Asegúrate de que este bucket exista en Supabase
+            .upload(nombreArchivo, file);
+
+        if (error) throw error;
+
+        const { data: urlData } = supabase.storage
+            .from("refugio-images")
+            .getPublicUrl(nombreArchivo);
+
+        if (urlData?.publicUrl) {
+            setFormData((f) => ({
+                ...f,
+                [`${tipo}_url`]: urlData.publicUrl,
+            }));
+        }
     };
 
     const handleSave = async () => {
@@ -126,29 +186,79 @@ function PerfilRefugio({ refugio, setRefugio }) {
                 />
             </label>
 
-            <label className="block">
-                <span className="font-semibold">URL logo</span>
-                <input
-                    type="text"
-                    name="logo_url"
-                    value={formData.logo_url}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
-                    placeholder="https://..."
-                />
-            </label>
+            {/* Logo actual */}
+            {formData.logo_url && (
+                <div className="mb-2">
+                    <span className="font-semibold">Logo actual:</span>
+                    <img src={formData.logo_url} alt="Logo" className="h-20 mt-2 rounded shadow" />
+                </div>
+            )}
 
-            <label className="block">
-                <span className="font-semibold">URL banner</span>
-                <input
-                    type="text"
-                    name="banner_url"
-                    value={formData.banner_url}
-                    onChange={handleChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
-                    placeholder="https://..."
-                />
-            </label>
+            {/* Subir nuevo logo */}
+            <div className="mb-4">
+                <span className="font-semibold">Actualizar logo</span>
+                <div className="flex items-center space-x-2 mt-2">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        id="logoInput"
+                        onChange={(e) => setSelectedLogo(e.target.files[0])}
+                        className="hidden"
+                    />
+                    <button
+                        onClick={() => document.getElementById("logoInput").click()}
+                        className="bg-gray-200 hover:bg-gray-300 text-sm px-3 py-1 rounded shadow"
+                    >
+                        Seleccionar imagen
+                    </button>
+                    <button
+                        disabled={!selectedLogo || uploadingLogo}
+                        onClick={() => handleUploadImage(selectedLogo, "logo")}
+                        className={`bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded shadow ${uploadingLogo ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
+                    >
+                        {uploadingLogo ? "Subiendo..." : "Subir logo"}
+                    </button>
+                </div>
+            </div>
+
+            {/* Banner actual */}
+            {formData.banner_url && (
+                <div className="mb-2">
+                    <span className="font-semibold">Banner actual:</span>
+                    <img src={formData.banner_url} alt="Banner" className="h-24 w-full object-cover mt-2 rounded shadow" />
+                </div>
+            )}
+
+            {/* Subir nuevo banner */}
+            <div className="mb-4">
+                <span className="font-semibold">Actualizar banner</span>
+                <div className="flex items-center space-x-2 mt-2">
+                    <input
+                        type="file"
+                        accept="image/*"
+                        id="bannerInput"
+                        onChange={(e) => setSelectedBanner(e.target.files[0])}
+                        className="hidden"
+                    />
+                    <button
+                        onClick={() => document.getElementById("bannerInput").click()}
+                        className="bg-gray-200 hover:bg-gray-300 text-sm px-3 py-1 rounded shadow"
+                    >
+                        Seleccionar imagen
+                    </button>
+                    <button
+                        disabled={!selectedBanner || uploadingBanner}
+                        onClick={() => handleUploadImage(selectedBanner, "banner")}
+                        className={`bg-blue-600 hover:bg-blue-700 text-white text-sm px-3 py-1 rounded shadow ${uploadingBanner ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
+                    >
+                        {uploadingBanner ? "Subiendo..." : "Subir banner"}
+                    </button>
+                </div>
+            </div>
+
+
 
             <label className="block">
                 <span className="font-semibold">Información lateral (texto)</span>

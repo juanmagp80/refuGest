@@ -32,14 +32,14 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
                 .from("solicitudes_adopcion")
                 .select(`
           id,
-          estado,
+          status,
           adoptante_id,
           animal_id,
           adoptante:adoptante_id(name, contact_info),
           animal:animal_id(id, name, status)
         `)
                 .in("animal_id", animalIds)
-                .or("estado.eq.pendiente,estado.eq.aceptada");
+                .or("status.eq.pendiente,status.eq.aceptada");
 
             if (error) throw error;
 
@@ -75,13 +75,13 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
 
             const { error: errorSolicitud } = await supabase
                 .from("solicitudes_adopcion")
-                .update({ estado: "aceptada" })
+                .update({ status: "aceptada" })
                 .eq("id", solicitud.id);
             if (errorSolicitud) throw errorSolicitud;
 
             const { error: errorOtras } = await supabase
                 .from("solicitudes_adopcion")
-                .update({ estado: "rechazada" })
+                .update({ status: "rechazada" })
                 .eq("animal_id", solicitud.animal_id)
                 .neq("id", solicitud.id);
             if (errorOtras) throw errorOtras;
@@ -98,7 +98,7 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
 
         const { error } = await supabase
             .from("solicitudes_adopcion")
-            .update({ estado: "rechazada" })
+            .update({ status: "rechazada" })
             .eq("id", id);
 
         if (error) {
@@ -141,8 +141,8 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
                                 <span>Animal: {sol.animal.name}</span>
                                 <span
                                     className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${sol.animal.status === "Adoptado"
-                                            ? "bg-gray-300 text-gray-700"
-                                            : "bg-green-200 text-green-800"
+                                        ? "bg-gray-300 text-gray-700"
+                                        : "bg-green-200 text-green-800"
                                         }`}
                                 >
                                     {sol.animal.status}
@@ -155,19 +155,19 @@ export default function GestionSolicitudesAdopcion({ refugioId }) {
                             <p>
                                 <strong>Estado solicitud:</strong>{" "}
                                 <span
-                                    className={`font-semibold ${sol.estado === "pendiente"
-                                            ? "text-yellow-600"
-                                            : sol.estado === "aceptada"
-                                                ? "text-green-600"
-                                                : "text-red-600"
+                                    className={`font-semibold ${sol.status === "pendiente"
+                                        ? "text-yellow-600"
+                                        : sol.status === "aceptada"
+                                            ? "text-green-600"
+                                            : "text-red-600"
                                         }`}
                                 >
-                                    {sol.estado.charAt(0).toUpperCase() + sol.estado.slice(1)}
+                                    {sol.status.charAt(0).toUpperCase() + sol.status.slice(1)}
                                 </span>
                             </p>
                         </div>
 
-                        {sol.estado === "pendiente" && (
+                        {sol.status === "pendiente" && (
                             <div className="flex flex-wrap gap-3 justify-start sm:justify-end">
                                 <button
                                     onClick={() => aceptarSolicitud(sol)}

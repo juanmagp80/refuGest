@@ -4,7 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-export default function AnimalesParaAdoptar({ adoptanteId }) {
+export default function AnimalesParaAdoptar({ adoptanteId, refugioId }) {
     const [animales, setAnimales] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -13,18 +13,27 @@ export default function AnimalesParaAdoptar({ adoptanteId }) {
     useEffect(() => {
         const fetchAnimales = async () => {
             setLoading(true);
-            const { data, error } = await supabase
+
+            let query = supabase
                 .from("animales")
                 .select("*, refugio:refugio_id(name, provincia)")
-                .eq("status", "Disponible") // corregido status->estado para coherencia con tus otros ejemplos
+                .eq("status", "Disponible")
                 .order("created_at", { ascending: false });
+
+            if (refugioId) {
+                query = query.eq("refugio_id", refugioId);
+            }
+
+            const { data, error } = await query;
 
             if (error) setError(error.message);
             else setAnimales(data || []);
+
             setLoading(false);
         };
+
         fetchAnimales();
-    }, []);
+    }, [refugioId]);
 
     const solicitarAdopcion = async (animalId) => {
         setSolicitando(animalId);
@@ -38,7 +47,6 @@ export default function AnimalesParaAdoptar({ adoptanteId }) {
             .eq("status", "pendiente")
             .single();
 
-        // Si el error es diferente a no encontrado (código PGRST116)
         if (errCheck && errCheck.code !== "PGRST116") {
             setError(errCheck.message);
             setSolicitando(null);
@@ -128,7 +136,9 @@ export default function AnimalesParaAdoptar({ adoptanteId }) {
                                         : "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white"
                                         }`}
                                 >
-                                    {solicitando === animal.id ? "Enviando solicitud..." : "Solicitar adopción"}
+                                    {solicitando === animal.id
+                                        ? "Enviando solicitud..."
+                                        : "Solicitar adopción"}
                                 </button>
                             </div>
                         </div>
@@ -137,4 +147,4 @@ export default function AnimalesParaAdoptar({ adoptanteId }) {
             )}
         </div>
     );
-}
+} 
