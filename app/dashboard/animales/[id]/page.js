@@ -1,5 +1,6 @@
 "use client";
 
+import SidebarFichaAnimal from "@/components/SidebarFichaAnimal";
 import { supabase } from "@/lib/supabaseClient";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -74,112 +75,118 @@ export default function EditarAnimalPage() {
     if (!form) return <p className="p-8 text-center text-red-600">{error || "Animal no encontrado"}</p>;
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-pink-100 animate-fade-in p-4 flex items-center justify-center">
-            <form
-                onSubmit={handleSubmit}
-                className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-6 w-full max-w-lg flex flex-col gap-6 border-2 border-blue-200 animate-slide-up"
-            >
-                <div className="flex flex-col items-center mb-4">
-                    <div className="flex items-center gap-2 text-4xl text-yellow-600 drop-shadow-lg">
-                        <FaDog />
-                        <FaCat />
+
+        <div className="min-h-screen bg-gray-100 p-4 flex flex-col md:flex-row ">
+            <SidebarFichaAnimal id={id} />
+            <div className="flex-1">
+
+                <form onSubmit={handleSubmit} className="max-w-4xl mx-auto bg-white shadow-xl rounded-2xl p-6 space-y-6">
+
+                    {/* Cabecera */}
+                    <div className="flex flex-col sm:flex-row items-center gap-6 border-b pb-6">
+                        {form.imagen ? (
+                            <img
+                                src={form.imagen}
+                                alt={form.name}
+                                className="w-32 h-32 rounded-full object-cover border-4 border-blue-300"
+                            />
+                        ) : (
+                            <div className="w-32 h-32 rounded-full bg-blue-100 flex items-center justify-center text-4xl text-blue-600">
+                                {form.species?.toLowerCase() === "perro" ? <FaDog /> : <FaCat />}
+                            </div>
+                        )}
+                        <div className="text-center sm:text-left flex-1">
+                            <h1 className="text-3xl font-bold text-gray-800">{form.name}</h1>
+                            <div className="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                                <Badge color="pink">{form.sexo}</Badge>
+                                <Badge color="blue">{form.status || "Sin estado"}</Badge>
+                            </div>
+                            <p className="text-gray-600 mt-1">Edad: {form.edad}</p>
+                        </div>
                     </div>
-                    <h1 className="text-2xl sm:text-3xl font-extrabold mt-2 text-blue-700 tracking-tight drop-shadow-lg text-center">
-                        Editar animal
-                    </h1>
-                    <p className="text-gray-500 text-sm mt-1 text-center">Actualiza los datos del animal</p>
-                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Input name="name" icon={<FaIdBadge />} placeholder="Nombre" value={form.name} onChange={handleChange} />
-                    <Input name="species" icon={<FaDog />} placeholder="Especie" value={form.species} onChange={handleChange} />
-                    <Input name="breed" icon={<FaInfoCircle />} placeholder="Raza" value={form.breed} onChange={handleChange} />
-                    <Input name="edad" icon={<FaCalendarAlt />} placeholder="Edad" value={form.edad} onChange={handleChange} />
-                    <Input name="sexo" icon={<FaVenusMars />} placeholder="Sexo" value={form.sexo} onChange={handleChange} />
-                    <Input name="chip" icon={<FaIdBadge />} placeholder="Nº Chip" value={form.chip} onChange={handleChange} />
-                    <Input name="ultima_visita" type="date" icon={<FaCalendarAlt />} value={form.ultima_visita || ""} onChange={handleChange} />
-                    <Input name="veterinario" icon={<FaUserMd />} placeholder="Veterinario" value={form.veterinario} onChange={handleChange} />
-                </div>
-
-                <label className="flex items-center gap-3 text-black font-medium">
-                    <input type="checkbox" name="esterilizado" checked={form.esterilizado} onChange={handleChange} className="accent-blue-600 scale-125" />
-                    Esterilizado
-                </label>
-
-                {/* Select para cambiar el estado */}
-                <div className="relative w-full">
-                    <span className="absolute left-3 top-3 text-blue-400">
-                        <FaInfoCircle />
-                    </span>
-                    <select
-                        name="status"
-                        value={form.status || ""}
-                        onChange={handleChange}
-                        className="text-black border-2 border-blue-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-full"
-                    >
-                        <option value="">Selecciona un estado</option>
-                        <option value="Disponible">Disponible</option>
-                        <option value="Adoptado">Adoptado</option>
-                        <option value="En espera">En espera</option>
-                    </select>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={openCloudinaryWidget}
-                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-4 py-2 rounded font-bold shadow transition-all duration-200"
-                >
-                    Cambiar imagen
-                </button>
-
-                {form.imagen && (
+                    {/* Botón imagen */}
                     <div className="flex justify-center">
-                        <img
-                            src={form.imagen}
-                            alt="Imagen del animal"
-                            className="w-28 h-28 sm:w-32 sm:h-32 object-cover rounded-full border-4 border-blue-300 shadow-lg mt-2"
-                        />
+                        <button
+                            type="button"
+                            onClick={openCloudinaryWidget}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow"
+                        >
+                            Cambiar imagen
+                        </button>
                     </div>
-                )}
 
-                <TextArea name="descripcion" icon={<FaInfoCircle />} placeholder="Descripción" value={form.descripcion} onChange={handleChange} />
-                <TextArea name="vacunas" icon={<FaSyringe />} placeholder="Vacunas" value={form.vacunas} onChange={handleChange} />
-                <TextArea name="enfermedades" icon={<FaNotesMedical />} placeholder="Enfermedades" value={form.enfermedades} onChange={handleChange} />
-                <TextArea name="tratamientos" icon={<FaNotesMedical />} placeholder="Tratamientos" value={form.tratamientos} onChange={handleChange} />
-                <TextArea name="observaciones" icon={<FaInfoCircle />} placeholder="Observaciones" value={form.observaciones} onChange={handleChange} />
+                    {/* Información básica */}
+                    <section>
+                        <h2 className="text-xl font-semibold text-gray-700 mb-4">Información básica</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Input name="name" icon={<FaIdBadge />} placeholder="Nombre" value={form.name} onChange={handleChange} />
+                            <Input name="species" icon={<FaDog />} placeholder="Especie" value={form.species} onChange={handleChange} />
+                            <Input name="breed" icon={<FaInfoCircle />} placeholder="Raza" value={form.breed} onChange={handleChange} />
+                            <Input name="edad" icon={<FaCalendarAlt />} placeholder="Edad" value={form.edad} onChange={handleChange} />
+                            <Input name="sexo" icon={<FaVenusMars />} placeholder="Sexo" value={form.sexo} onChange={handleChange} />
+                            <Input name="chip" icon={<FaIdBadge />} placeholder="Nº Chip" value={form.chip} onChange={handleChange} />
+                        </div>
+                    </section>
 
-                {error && <p className="text-red-600 text-center">{error}</p>}
-                {success && <p className="text-green-600 flex items-center gap-2 justify-center"><FaCheckCircle /> {success}</p>}
+                    {/* Otros datos */}
+                    <section>
+                        <h2 className="text-xl font-semibold text-gray-700 mb-4">Salud y otros</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <Input name="ultima_visita" type="date" icon={<FaCalendarAlt />} value={form.ultima_visita || ""} onChange={handleChange} />
+                            <Input name="veterinario" icon={<FaUserMd />} placeholder="Veterinario" value={form.veterinario} onChange={handleChange} />
+                        </div>
 
-                <button
-                    type="submit"
-                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl mt-4 font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
-                >
-                    Guardar cambios
-                </button>
-            </form>
+                        <label className="flex items-center gap-3 text-black font-medium mt-4">
+                            <input type="checkbox" name="esterilizado" checked={form.esterilizado} onChange={handleChange} className="accent-blue-600 scale-125" />
+                            Esterilizado
+                        </label>
 
-            {/* Animaciones */}
-            <style jsx global>{`
-                @keyframes fade-in {
-                    from { opacity: 0; }
-                    to { opacity: 1; }
-                }
-                .animate-fade-in {
-                    animation: fade-in 1s ease;
-                }
-                @keyframes slide-up {
-                    from { transform: translateY(40px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-                .animate-slide-up {
-                    animation: slide-up 0.8s cubic-bezier(.4,2,.6,1) 0.1s both;
-                }
-            `}</style>
+                        <TextArea name="descripcion" icon={<FaInfoCircle />} placeholder="Descripción" value={form.descripcion} onChange={handleChange} />
+                        <TextArea name="vacunas" icon={<FaSyringe />} placeholder="Vacunas" value={form.vacunas} onChange={handleChange} />
+                        <TextArea name="enfermedades" icon={<FaNotesMedical />} placeholder="Enfermedades" value={form.enfermedades} onChange={handleChange} />
+                        <TextArea name="tratamientos" icon={<FaNotesMedical />} placeholder="Tratamientos" value={form.tratamientos} onChange={handleChange} />
+                        <TextArea name="observaciones" icon={<FaInfoCircle />} placeholder="Observaciones" value={form.observaciones} onChange={handleChange} />
+                    </section>
+
+                    {/* Estado */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-600 mb-1">Estado</label>
+                        <select
+                            name="status"
+                            value={form.status || ""}
+                            onChange={handleChange}
+                            className="text-black border border-blue-200 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-400"
+                        >
+                            <option value="">Selecciona un estado</option>
+                            <option value="Disponible">Disponible</option>
+                            <option value="Adoptado">Adoptado</option>
+                            <option value="En espera">En espera</option>
+                        </select>
+                    </div>
+
+                    {/* Feedback */}
+                    {error && <p className="text-red-600 text-center">{error}</p>}
+                    {success && <p className="text-green-600 flex items-center gap-2 justify-center"><FaCheckCircle /> {success}</p>}
+
+                    {/* Guardar */}
+                    <div className="text-center">
+                        <button
+                            type="submit"
+                            className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl mt-6 font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
+                        >
+                            Guardar cambios
+                        </button>
+                    </div>
+                </form>
+
+            </div>
         </div>
+
     );
 }
 
+// COMPONENTES AUXILIARES
 function Input({ name, icon, ...props }) {
     return (
         <div className="relative w-full">
@@ -187,7 +194,7 @@ function Input({ name, icon, ...props }) {
             <input
                 name={name}
                 {...props}
-                className="text-black border-2 border-blue-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-full"
+                className="text-black border border-blue-200 rounded-lg px-9 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             />
         </div>
     );
@@ -195,13 +202,26 @@ function Input({ name, icon, ...props }) {
 
 function TextArea({ name, icon, ...props }) {
     return (
-        <div className="relative w-full">
+        <div className="relative w-full mt-3">
             <span className="absolute left-3 top-3 text-blue-400">{icon}</span>
             <textarea
                 name={name}
                 {...props}
-                className="text-black border-2 border-blue-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition min-h-[60px] w-full"
+                className="text-black border border-blue-200 rounded-lg px-9 py-2 w-full min-h-[60px] focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
             />
         </div>
+    );
+}
+
+function Badge({ children, color }) {
+    const colors = {
+        pink: "bg-pink-100 text-pink-800",
+        blue: "bg-blue-100 text-blue-800",
+        purple: "bg-purple-100 text-purple-800",
+    };
+    return (
+        <span className={`px-3 py-1 text-sm rounded-full font-medium ${colors[color]}`}>
+            {children}
+        </span>
     );
 }

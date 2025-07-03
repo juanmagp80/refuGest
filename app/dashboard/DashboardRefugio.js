@@ -5,72 +5,61 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
+    FaCat,
     FaClipboardList,
+    FaDog,
     FaHandsHelping,
     FaPaw,
     FaSignOutAlt,
     FaUserCircle,
 } from "react-icons/fa";
+import PerfilRefugio from "./PerfilRefugio";
 
-export default function DashboardRefugio({ refugio }) {
+export default function DashboardRefugio({ refugio: initialRefugio }) {
     const router = useRouter();
     const [voluntarios, setVoluntarios] = useState([]);
     const [animales, setAnimales] = useState([]);
     const [tareasCompletadas, setTareasCompletadas] = useState([]);
     const [vista, setVista] = useState("inicio");
     const [loading, setLoading] = useState(true);
+    const [refugio, setRefugio] = useState(initialRefugio);
+
+
     useEffect(() => {
         const fetchAnimales = async () => {
             try {
                 const {
                     data: { user },
-                    error: userError,
                 } = await supabase.auth.getUser();
+                if (!user) return;
 
-                if (userError || !user) {
-                    console.error("Error obteniendo usuario o no está logueado", userError);
-                    return;
-                }
-
-                const { data: refugio, error: refugioError } = await supabase
+                const { data: refugio } = await supabase
                     .from("refugios")
                     .select("id")
                     .eq("user_id", user.id)
                     .single();
 
-                if (refugioError || !refugio) {
-                    console.error("No se encontró refugio para el usuario", refugioError);
-                    return;
-                }
-
-                const { data: animalesData, error: animalesError } = await supabase
+                const { data: animalesData } = await supabase
                     .from("animales")
                     .select("*")
                     .eq("refugio_id", refugio.id)
                     .order("created_at", { ascending: false });
 
-                if (animalesError) {
-                    console.error("Error cargando animales", animalesError);
-                } else {
-                    console.log("Animales cargados:", animalesData);
-                    setAnimales(animalesData);
-                }
+                setAnimales(animalesData);
             } catch (e) {
-                console.error("Error en fetchAnimales:", e);
+                console.error("Error cargando datos:", e);
             } finally {
-                setLoading(false);  // <--- Aquí, para que pase a mostrar la UI real
+                setLoading(false);
             }
         };
 
         fetchAnimales();
     }, []);
 
-
     const handleLogout = async () => {
         await supabase.auth.signOut();
         router.push("/login");
     };
-    console.log("Animales recibidos:", animales);
 
     const renderVista = () => {
         switch (vista) {
@@ -78,24 +67,46 @@ export default function DashboardRefugio({ refugio }) {
                 return (
                     <>
                         <section className="mb-12">
-                            <h2 className="text-3xl font-bold text-purple-800 mb-6">🐾 Últimos animales registrados</h2>
+                            <h2 className="text-3xl font-bold text-blue-800 mb-6 flex items-center gap-2">
+                                <FaPaw className="text-blue-500" /> Últimos animales registrados
+                            </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 {animales.length === 0 ? (
-                                    <p className="text-center col-span-full text-gray-500 italic">No hay animales registrados aún.</p>
+                                    <p className="text-center col-span-full text-gray-500 italic">
+                                        No hay animales registrados aún.
+                                    </p>
                                 ) : (
                                     animales.slice(0, 6).map((a) => (
                                         <div
                                             key={a.id}
-                                            className="bg-purple-100 border border-purple-300 rounded-xl p-4 shadow-lg flex items-center gap-4"
+                                            className="bg-white border border-blue-200 rounded-2xl p-6 shadow-xl flex items-center gap-6"
                                         >
-                                            <img
-                                                src={a.imagen || "/animal-placeholder.png"}
-                                                alt={a.name}
-                                                className="w-20 h-20 object-cover rounded-full border-4 border-purple-300 shadow-md"
-                                            />
+                                            {a.imagen ? (
+                                                <img
+                                                    src={a.imagen}
+                                                    alt={a.name}
+                                                    className="w-24 h-24 object-cover rounded-full border-4 border-blue-300 shadow"
+                                                />
+                                            ) : (
+                                                <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-4xl text-blue-600">
+                                                    {a.especie?.toLowerCase() === "perro" ? (
+                                                        <FaDog />
+                                                    ) : (
+                                                        <FaCat />
+                                                    )}
+                                                </div>
+                                            )}
                                             <div>
-                                                <h3 className="text-xl font-bold text-purple-700">{a.name}</h3>
-                                                <p className="text-purple-900">{a.especie}</p>
+                                                <h3 className="text-2xl font-bold text-blue-800">
+                                                    {a.name}
+                                                </h3>
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    <Badge color="pink">{a.sexo}</Badge>
+                                                    <Badge color="blue">{a.status || "Sin estado"}</Badge>
+                                                </div>
+                                                <p className="text-sm text-gray-600 mt-1">
+                                                    Especie: {a.especie || "No definida"}
+                                                </p>
                                             </div>
                                         </div>
                                     ))
@@ -104,13 +115,20 @@ export default function DashboardRefugio({ refugio }) {
                         </section>
 
                         <section className="mb-12">
-                            <h2 className="text-3xl font-bold text-blue-800 mb-6">🧑‍🤝‍🧑 Últimos voluntarios añadidos</h2>
+                            <h2 className="text-3xl font-bold text-pink-800 mb-6 flex items-center gap-2">
+                                <FaHandsHelping className="text-pink-500" /> Últimos voluntarios añadidos
+                            </h2>
                             {voluntarios.length === 0 ? (
-                                <p className="text-center text-gray-500 italic">No hay voluntarios añadidos aún.</p>
+                                <p className="text-center text-gray-500 italic">
+                                    No hay voluntarios añadidos aún.
+                                </p>
                             ) : (
-                                <ul className="space-y-2 text-blue-900 font-medium">
+                                <ul className="space-y-2 text-pink-900 font-medium">
                                     {voluntarios.map((v) => (
-                                        <li key={v.id} className="bg-blue-100 px-4 py-2 rounded-xl shadow">
+                                        <li
+                                            key={v.id}
+                                            className="bg-pink-100 px-4 py-2 rounded-xl shadow"
+                                        >
                                             {v.name}
                                         </li>
                                     ))}
@@ -119,18 +137,29 @@ export default function DashboardRefugio({ refugio }) {
                         </section>
 
                         <section className="mb-12">
-                            <h2 className="text-3xl font-bold text-gray-700 mb-6">📦 Últimas adopciones</h2>
-                            <p className="text-gray-600 italic">Esta sección estará disponible próximamente.</p>
+                            <h2 className="text-3xl font-bold text-gray-700 mb-6 flex items-center gap-2">
+                                📦 Últimas adopciones
+                            </h2>
+                            <p className="text-gray-600 italic">
+                                Esta sección estará disponible próximamente.
+                            </p>
                         </section>
 
                         <section className="mb-8">
-                            <h2 className="text-3xl font-bold text-green-800 mb-6">✅ Últimas tareas completadas</h2>
+                            <h2 className="text-3xl font-bold text-green-800 mb-6 flex items-center gap-2">
+                                ✅ Últimas tareas completadas
+                            </h2>
                             {tareasCompletadas.length === 0 ? (
-                                <p className="text-center text-gray-500 italic">No hay tareas completadas recientemente.</p>
+                                <p className="text-center text-gray-500 italic">
+                                    No hay tareas completadas recientemente.
+                                </p>
                             ) : (
                                 <ul className="space-y-2 text-green-900 font-medium">
                                     {tareasCompletadas.map((t) => (
-                                        <li key={t.id} className="bg-green-100 px-4 py-2 rounded-xl shadow">
+                                        <li
+                                            key={t.id}
+                                            className="bg-green-100 px-4 py-2 rounded-xl shadow"
+                                        >
                                             {t.titulo}
                                         </li>
                                     ))}
@@ -140,35 +169,26 @@ export default function DashboardRefugio({ refugio }) {
                     </>
                 );
             case "perfil":
-                return (
-                    <div className="mt-6 text-gray-800 max-w-3xl mx-auto space-y-3">
-                        <p>
-                            <strong>Nombre:</strong> {refugio.name}
-                        </p>
-                        <p>
-                            <strong>Descripción:</strong> {refugio.description}
-                        </p>
-                        <p>
-                            <strong>Ubicación:</strong> {refugio.location}
-                        </p>
-                        <p>
-                            <strong>Contacto:</strong> {refugio.contact_info}
-                        </p>
-                    </div>
-                );
+                return <PerfilRefugio refugio={refugio} setRefugio={setRefugio} />;
+
             case "solicitudes":
                 return <GestionSolicitudesAdopcion refugioId={refugio.id} />;
+
             default:
                 return null;
         }
     };
 
     if (loading)
-        return <p className="text-center mt-10 text-gray-600">Cargando resumen del refugio...</p>;
+        return (
+            <p className="text-center mt-10 text-gray-600">
+                Cargando resumen del refugio...
+            </p>
+        );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-pink-100 p-6 sm:p-10">
-            <div className="max-w-5xl mx-auto bg-white rounded-3xl shadow-2xl p-8 sm:p-10 border border-blue-300">
+        <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-blue-100 p-6 sm:p-10">
+            <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-8 sm:p-10 border border-blue-100 ring-1 ring-blue-200">
                 <h1 className="text-4xl sm:text-5xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-red-400 drop-shadow-xl text-center sm:text-left">
                     {refugio.name}
                 </h1>
@@ -241,5 +261,18 @@ function NavButton({ active, onClick, icon, label, activeColor, inactiveColor })
             <span className="text-xl">{icon}</span>
             {label}
         </button>
+    );
+}
+
+function Badge({ children, color }) {
+    const colors = {
+        pink: "bg-pink-100 text-pink-800",
+        blue: "bg-blue-100 text-blue-800",
+        purple: "bg-purple-100 text-purple-800",
+    };
+    return (
+        <span className={`px-3 py-1 text-sm rounded-full font-medium ${colors[color]}`}>
+            {children}
+        </span>
     );
 }

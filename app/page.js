@@ -160,7 +160,11 @@ export default function HomePage() {
               <select
                 className="border-2 border-purple-200 rounded-lg px-6 py-3 text-black focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
                 value={refugioSeleccionado}
-                onChange={e => setRefugioSeleccionado(e.target.value)}
+                onChange={e => {
+                  const id = e.target.value;
+                  setRefugioSeleccionado(id);
+                  if (id) router.push(`/refugio/${id}`);
+                }}
                 disabled={!provinciaSeleccionada}
               >
                 <option value="">Selecciona Refugio</option>
@@ -168,6 +172,7 @@ export default function HomePage() {
                   <option key={ref.id} value={ref.id}>{ref.name}</option>
                 ))}
               </select>
+
             </div>
           </div>
         </div>
