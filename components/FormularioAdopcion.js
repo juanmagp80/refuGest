@@ -15,7 +15,7 @@ export default function FormularioAdopcion({ adopcion, onFormularioEnviado }) {
         setError(null);
         setLoading(true);
         try {
-            const { error } = await supabase
+            const { error: insertError } = await supabase
                 .from("formularios_adopcion")
                 .insert({
                     adopcion_id: adopcion.id,
@@ -25,13 +25,15 @@ export default function FormularioAdopcion({ adopcion, onFormularioEnviado }) {
                     tiempodisponible,
                     gastosveterinario,
                 });
-            if (error) throw error;
+            if (insertError) throw insertError;
 
-            // Opcional: marcar la adopción como formulario completado
-            await supabase
+            // Marcar la adopción como formulario completado (corregido el update)
+            const { error: updateError } = await supabase
                 .from("adopciones")
-                .update({ formulario_completado: true })
+                .update({ formulario_iniciado: false })
                 .eq("id", adopcion.id);
+
+            if (updateError) throw updateError;
 
             if (onFormularioEnviado) onFormularioEnviado();
         } catch (err) {

@@ -20,14 +20,10 @@ export default function DashboardAdoptante({ adoptante }) {
     }, []);
 
     const fetchAdopcionesPendientesFormulario = async () => {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        // Solo adopciones con formulario_iniciado = true
         const { data: adopciones } = await supabase
             .from("adopciones")
             .select("id, animal_id, formulario_iniciado")
-            .eq("adoptante_id", user.id)
+            .eq("adoptante_id", adoptante.id)
             .eq("formulario_iniciado", true);
 
         setAdopcionesPendientes(adopciones || []);
@@ -84,15 +80,36 @@ export default function DashboardAdoptante({ adoptante }) {
         if (!error) setSolicitudes(data);
     };
 
+    // Crear adopción pendiente si la solicitud es aceptada y no existe adopción
+    useEffect(() => {
+        if (solicitudes.length > 0) {
+            solicitudes.forEach(async (s) => {
+                if (s.status === "aceptada") {
+                    const { data: adopcionExistente } = await supabase
+                        .from("adopciones")
+                        .select("id")
+                        .eq("adoptante_id", s.adoptante_id)
+                        .eq("animal_id", s.animal_id)
+                        .maybeSingle();
+
+                    if (!adopcionExistente) {
+                        await supabase.from("adopciones").insert([{
+                            adoptante_id: s.adoptante_id,
+                            animal_id: s.animal_id,
+                            formulario_iniciado: true
+                        }]);
+                        fetchAdopcionesPendientesFormulario();
+                    }
+                }
+            });
+        }
+    }, [solicitudes]);
+
     // Cuando se envía el formulario, refresca adopciones pendientes y solicitudes
     const handleFormularioEnviado = () => {
         fetchAdopcionesPendientesFormulario();
         fetchSolicitudes();
     };
-
-    // LOGS para depuración
-    console.log("Solicitudes:", solicitudes);
-    console.log("Adopciones pendientes:", adopcionesPendientes);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-pink-100 to-purple-100 p-6">
@@ -178,15 +195,11 @@ export default function DashboardAdoptante({ adoptante }) {
                             </p>
                         ) : (
                             solicitudes.map((s) => {
-                                // Busca la adopción pendiente asociada a esta solicitud (por animal)
                                 const adopcionPendiente = adopcionesPendientes.find(
                                     (a) =>
-                                        a.animal_id === s.animal_id &&
+                                        String(a.animal_id) === String(s.animal_id) &&
                                         a.formulario_iniciado === true
                                 );
-                                // LOG por cada solicitud
-                                console.log("Solicitud:", s);
-                                console.log("Adopcion encontrada:", adopcionPendiente);
                                 return (
                                     <li key={s.id} className="bg-purple-50 p-4 rounded-xl shadow flex flex-col gap-4">
                                         <div className="flex items-center gap-4">

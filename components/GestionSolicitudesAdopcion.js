@@ -4,170 +4,147 @@ import { useEffect, useState } from "react";
 export default function GestionSolicitudesAdopcion({ refugioId }) {
     const [solicitudes, setSolicitudes] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [formularioSeleccionado, setFormularioSeleccionado] = useState(null);
 
-    // 1) Carga inicial de solicitudes
-    const fetchSolicitudes = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const { data: animalesData, error: animalesError } = await supabase
-                .from("animales")
-                .select("id")
-                .eq("refugio_id", refugioId);
-            if (animalesError) throw animalesError;
-
-            const animalIds = animalesData.map((a) => a.id);
-            if (!animalIds.length) {
-                setSolicitudes([]);
-                return;
-            }
-
-            const { data, error } = await supabase
+    useEffect(() => {
+        const fetchSolicitudes = async () => {
+            setLoading(true);
+            // 1. Trae todas las solicitudes con animal y adoptante
+            const { data: solicitudesRaw, error } = await supabase
                 .from("solicitudes_adopcion")
                 .select(`
                     id,
                     status,
+                    created_at,
                     adoptante_id,
                     animal_id,
-                    adoptante:adoptante_id(id, name, contact_info),
-                    animal:animal_id(id, name, status)
+                    animal:animal_id(
+                        name, species, imagen, refugio_id
+                    ),
+                    adoptante:adoptante_id(name, email)
                 `)
-                .in("animal_id", animalIds)
-                .eq("status", "pendiente");  // Solo pendientes
+                .order("created_at", { ascending: false });
 
-            if (error) throw error;
-            setSolicitudes(data);
+            if (error) {
+                setSolicitudes([]);
+                setLoading(false);
+                return;
+            }
 
-            // LOG de solicitudes cargadas
-            console.log("Solicitudes pendientes cargadas:", data);
+            // 2. Filtra por animales del refugio actual
+            const solicitudesFiltradas = (solicitudesRaw || []).filter(
+                s => s.animal?.refugio_id === refugioId
+            );
 
-        } catch (err) {
-            setError(err.message);
-        } finally {
+            // 3. Para cada solicitud, busca la adopción y el formulario
+            const solicitudesConFormulario = await Promise.all(
+                solicitudesFiltradas.map(async (s) => {
+                    // Busca la adopción correspondiente
+                    const { data: adopcion } = await supabase
+                        .from("adopciones")
+                        .select("id")
+                        .eq("adoptante_id", s.adoptante_id)
+                        .eq("animal_id", s.animal_id)
+                        .maybeSingle();
+
+                    let formulario = null;
+                    if (adopcion) {
+                        // Busca el formulario de esa adopción
+                        const { data: formularios } = await supabase
+                            .from("formularios_adopcion")
+                            .select("id, motivo, experiencia, vivienda, tiempodisponible, gastosveterinario")
+                            .eq("adopcion_id", adopcion.id)
+                            .limit(1)
+                            .maybeSingle();
+                        formulario = formularios || null;
+                    }
+                    return { ...s, formulario };
+                })
+            );
+
+            setSolicitudes(solicitudesConFormulario);
             setLoading(false);
-        }
-    };
-
-    useEffect(() => {
+        };
         fetchSolicitudes();
     }, [refugioId]);
 
-    // 2) Aceptar solicitud: upsert adoptante, crear adopción y actualizar estado
-    const aceptarSolicitud = async (sol) => {
-        setError(null);
-        try {
-            // 2.1) Upsert adoptante
-            const { data: adoptanteUpsert, error: errAdoptante } = await supabase
-                .from("adoptantes")
-                .upsert(
-                    {
-                        id: sol.adoptante_id,
-                        name: sol.adoptante.name,
-                        contact_info: sol.adoptante.contact_info,
-                    },
-                    { onConflict: "id" }
-                )
-                .select("id")
-                .single();
-            if (errAdoptante) throw errAdoptante;
-
-            // LOG adoptante upsert
-            console.log("Adoptante upsert:", adoptanteUpsert);
-
-            // 2.2) Crear adopción y esperar a que termine
-            const { data: adopcionInsertada, error: errorInsert } = await supabase
-                .from("adopciones")
-                .insert(
-                    [
-                        {
-                            adoptante_id: adoptanteUpsert.id,
-                            animal_id: sol.animal_id,
-                            formulario_iniciado: true,
-                        },
-                    ],
-                    { returning: "representation" }
-                )
-                .select("*")
-                .single();
-            if (errorInsert) throw errorInsert;
-
-            // LOG adopción insertada
-            console.log("Adopción insertada:", adopcionInsertada);
-
-            // Confirmar que la adopción existe antes de continuar (por latencia)
-            let intentos = 0;
-            let adopcionConfirmada = null;
-            while (intentos < 5 && !adopcionConfirmada) {
-                const { data: confirm, error: confirmError } = await supabase
-                    .from("adopciones")
-                    .select("id, adoptante_id, animal_id, formulario_iniciado")
-                    .eq("id", adopcionInsertada.id)
-                    .single();
-                if (confirm && confirm.id) {
-                    adopcionConfirmada = confirm;
-                } else {
-                    await new Promise(res => setTimeout(res, 300));
-                    intentos++;
-                }
-            }
-            // LOG adopción confirmada
-            console.log("Adopción confirmada:", adopcionConfirmada);
-
-            if (!adopcionConfirmada) {
-                throw new Error("No se pudo confirmar la creación de la adopción. Intenta de nuevo.");
-            }
-
-            // 2.3) Actualizar estado del animal y solicitud
-            // Cambia aquí el valor de status a uno permitido por tu base de datos, por ejemplo "reservado"
-            const { error: errorAnimal } = await supabase.from("animales").update({ status: "reservado" }).eq("id", sol.animal_id);
-            if (errorAnimal) throw errorAnimal;
-            const { error: errorSolicitud } = await supabase.from("solicitudes_adopcion").update({ status: "aceptada" }).eq("id", sol.id);
-            if (errorSolicitud) throw errorSolicitud;
-
-            // LOG actualización de animal y solicitud
-            console.log("Animal actualizado a 'reservado' y solicitud a 'aceptada'");
-
-            // Refrescar solicitudes
-            fetchSolicitudes();
-
-        } catch (err) {
-            setError(err.message);
-            console.error("Error al aceptar solicitud:", err);
-        }
-    };
-
-    // Renderizado
     return (
-        <div className="max-w-4xl mx-auto p-6">
-            <h1 className="text-2xl font-bold mb-4">Solicitudes de adopción</h1>
-            {error && <p className="text-red-600 mb-4">{error}</p>}
+        <div>
+            <h2 className="text-2xl font-bold mb-6">Solicitudes de adopción</h2>
             {loading ? (
-                <p>Cargando...</p>
+                <p>Cargando solicitudes...</p>
             ) : solicitudes.length === 0 ? (
-                <p>No hay solicitudes pendientes.</p>
+                <p className="italic text-gray-500">No hay solicitudes aún.</p>
             ) : (
-                <ul className="space-y-4">
-                    {solicitudes.map((sol) => (
-                        <li key={sol.id} className="border rounded p-4 flex flex-col md:flex-row md:items-center md:justify-between">
-                            <div>
-                                <p><strong>Animal:</strong> {sol.animal?.name}</p>
-                                <p><strong>Adoptante:</strong> {sol.adoptante?.name}</p>
-                                <p><strong>Contacto:</strong> {sol.adoptante?.contact_info}</p>
+                <ul className="space-y-6">
+                    {solicitudes.map((s) => (
+                        <li key={s.id} className="bg-white p-4 rounded-xl shadow flex flex-col gap-2">
+                            <div className="flex items-center gap-4">
+                                <img
+                                    src={s.animal.imagen}
+                                    alt={s.animal.name}
+                                    className="w-16 h-16 rounded object-cover"
+                                />
+                                <div>
+                                    <h4 className="font-bold text-lg">{s.animal.name} ({s.animal.species})</h4>
+                                    <p className="text-sm text-gray-600">
+                                        Solicitante: {s.adoptante?.name || "Desconocido"}
+                                    </p>
+                                    <p className="text-xs text-gray-400">
+                                        Solicitada el {new Date(s.created_at).toLocaleDateString()}
+                                    </p>
+                                    <p className="text-sm">
+                                        Estado: <span className="font-semibold">{s.status}</span>
+                                    </p>
+                                </div>
                             </div>
-                            <button
-                                className="mt-2 md:mt-0 bg-green-600 text-white px-4 py-2 rounded"
-                                onClick={() => {
-                                    console.log("Aceptar solicitud:", sol);
-                                    aceptarSolicitud(sol);
-                                }}
-                            >
-                                Aceptar solicitud
-                            </button>
+                            {s.formulario ? (
+                                <button
+                                    className="mt-2 bg-blue-600 text-white px-4 py-2 rounded"
+                                    onClick={() => setFormularioSeleccionado(s.formulario)}
+                                >
+                                    Ver formulario enviado
+                                </button>
+                            ) : (
+                                <span className="mt-2 text-gray-500 italic text-sm">
+                                    Formulario no enviado aún.
+                                </span>
+                            )}
                         </li>
                     ))}
                 </ul>
             )}
+
+            {/* Modal para mostrar el formulario */}
+            {formularioSeleccionado && (
+                <ModalFormulario
+                    formulario={formularioSeleccionado}
+                    onClose={() => setFormularioSeleccionado(null)}
+                />
+            )}
+        </div>
+    );
+}
+
+function ModalFormulario({ formulario, onClose }) {
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-8 shadow-lg max-w-md w-full relative">
+                <button
+                    className="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl"
+                    onClick={onClose}
+                >
+                    ×
+                </button>
+                <h3 className="text-xl font-bold mb-4">Formulario de adopción</h3>
+                <div className="space-y-2">
+                    <p><b>Motivo:</b> {formulario.motivo}</p>
+                    <p><b>Experiencia:</b> {formulario.experiencia}</p>
+                    <p><b>Vivienda:</b> {formulario.vivienda}</p>
+                    <p><b>Tiempo disponible:</b> {formulario.tiempodisponible}</p>
+                    <p><b>Gastos veterinario:</b> {formulario.gastosveterinario}</p>
+                </div>
+            </div>
         </div>
     );
 }
