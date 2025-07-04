@@ -1,5 +1,6 @@
 "use client";
 
+import Sidebar from "@/components/Sidebar"; // Asegúrate que esta ruta es correcta
 import { supabase } from "@/lib/supabaseClient";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,9 +12,8 @@ export default function ListaAnimalesPage() {
     const [refugioId, setRefugioId] = useState(null);
     const [refugio, setRefugio] = useState(null);
     const [error, setError] = useState(null);
-    const router = useRouter();
     const [adoptante, setAdoptante] = useState(null);
-
+    const router = useRouter();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -23,7 +23,6 @@ export default function ListaAnimalesPage() {
                 return;
             }
 
-            // ¿Es un refugio?
             const { data: refugioData } = await supabase
                 .from("refugios")
                 .select("id, name")
@@ -49,7 +48,6 @@ export default function ListaAnimalesPage() {
                 return;
             }
 
-            // ¿Es adoptante?
             const { data: adoptanteData } = await supabase
                 .from("adoptantes")
                 .select("name")
@@ -59,7 +57,6 @@ export default function ListaAnimalesPage() {
             if (adoptanteData) {
                 setAdoptante(adoptanteData);
 
-                // Cargar todos los animales disponibles (para que pueda verlos)
                 const { data: animalesDisponibles, error: animalesError } = await supabase
                     .from("animales")
                     .select("*")
@@ -75,13 +72,11 @@ export default function ListaAnimalesPage() {
                 return;
             }
 
-            // Si no es ni refugio ni adoptante
             setError("No tienes permisos para ver esta página.");
         };
 
         fetchData();
     }, [router]);
-
 
     const handleDelete = async (id) => {
         if (confirm("¿Estás seguro de que quieres borrar este animal?")) {
@@ -95,66 +90,86 @@ export default function ListaAnimalesPage() {
     };
 
     return (
-        <div className="p-8 max-w-6xl mx-auto">
-            <div className="flex items-center justify-between mb-6">
-                <h1 className="text-3xl font-extrabold text-blue-700 flex items-center gap-2">
-                    <FaPaw /> Animales del refugio: {refugio?.name || ""}
-                </h1>
+        <div className="flex min-h-screen bg-gray-100">
+            <Sidebar />
+            <div className="flex-1 ml-64 p-8 max-w-7xl mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                    <h1 className="text-2xl font-extrabold text-blue-500 flex items-center gap-2">
+                        <FaPaw /> Animales del refugio: {refugio?.name || ""}
+                    </h1>
+                    <Link
+                        href="/dashboard/animales/nuevo"
+                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-bold shadow"
+                    >
+                        <FaPlus /> Nuevo
+                    </Link>
+                </div>
+
                 <Link
-                    href="/dashboard/animales/nuevo"
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded font-bold shadow"
+                    href="/dashboard"
+                    className="inline-flex items-center gap-2 mb-6 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-full font-bold shadow transition"
                 >
-                    <FaPlus /> Nuevo
+                    ⬅ Volver al dashboard
                 </Link>
-            </div>
 
-            <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 mb-6 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-full font-bold shadow transition"
-            >
-                ⬅ Volver al dashboard
-            </Link>
+                {error && <p className="text-red-600">{error}</p>}
 
-            {error && <p className="text-red-600">{error}</p>}
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                {animales.map((animal) => (
-                    <div key={animal.id} className="bg-white rounded-xl shadow-lg border border-blue-100 p-4">
-                        {animal.imagen && (
-                            <img src={animal.imagen} alt={animal.name} className="w-full h-48 object-cover rounded mb-3" />
-                        )}
-                        <div className="flex items-center justify-between mb-2">
-                            <h2 className="text-xl font-bold text-blue-600">{animal.name}</h2>
-                            <span
-                                className={`text-xs font-semibold px-3 py-1 rounded-full
-                    ${animal.status === "Disponible" ? "bg-green-200 text-green-800" : ""}
-                    ${animal.status === "En espera" ? "bg-yellow-200 text-yellow-800" : ""}
-                    ${animal.status === "Adoptado" ? "bg-gray-300 text-gray-800" : ""}
-                `}
-                            >
-                                {animal.status}
-                            </span>
-                        </div>
-                        <p className="text-gray-600">{animal.species} - {animal.breed}</p>
-                        <p className="text-sm text-gray-500 mt-1">{animal.descripcion}</p>
-                        {refugio && (
-                            <div className="flex justify-between mt-4 text-sm">
-                                <Link href={`/dashboard/animales/${animal.id}`} className="text-yellow-600 hover:underline flex items-center gap-1">
-                                    <FaEdit /> Editar
-                                </Link>
-                                <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:underline flex items-center gap-1">
-                                    <FaTrash /> Borrar
-                                </button>
-                            </div>
-                        )}
-
-
+                {animales.length === 0 && !error ? (
+                    <p className="text-center text-gray-500 mt-6">No hay animales registrados todavía.</p>
+                ) : (
+                    <div className="overflow-x-auto bg-white rounded-xl shadow border border-gray-200">
+                        <table className="min-w-full">
+                            <thead className="bg-gray-50 text-gray-700 text-sm font-semibold">
+                                <tr>
+                                    <th className="px-4 py-3 text-left">FOTO</th>
+                                    <th className="px-4 py-3 text-left">NOMBRE</th>
+                                    <th className="px-4 py-3 text-left">TIPO</th>
+                                    <th className="px-4 py-3 text-left">SEXO</th>
+                                    <th className="px-4 py-3 text-left">ESTADO</th>
+                                    <th className="px-4 py-3 text-center">ACCIONES</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {animales.map((animal) => (
+                                    <tr key={animal.id} className="border-t border-gray-200 hover:bg-gray-50">
+                                        <td className="px-4 py-3">
+                                            <img
+                                                src={animal.imagen || "/images/default-animal.jpg"}
+                                                alt={animal.name}
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3 font-semibold">{animal.name}</td>
+                                        <td className="px-4 py-3">{animal.species}</td>
+                                        <td className="px-4 py-3">{animal.sexo}</td>
+                                        <td className="px-4 py-3">
+                                            <span className={`px-2 py-1 text-xs font-bold rounded-full 
+                                                ${animal.status === "Disponible" ? "bg-green-100 text-green-800" : ""}
+                                                ${animal.status === "En espera" ? "bg-yellow-100 text-yellow-800" : ""}
+                                                ${animal.status === "Adoptado" ? "bg-purple-100 text-purple-800" : ""}
+                                            `}>
+                                                {animal.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-center">
+                                            {refugio && (
+                                                <div className="flex justify-center gap-4 text-lg">
+                                                    <Link href={`/dashboard/animales/${animal.id}`} className="text-yellow-600 hover:text-yellow-800">
+                                                        <FaEdit />
+                                                    </Link>
+                                                    <button onClick={() => handleDelete(animal.id)} className="text-red-600 hover:text-red-800">
+                                                        <FaTrash />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
-                ))}
+                )}
             </div>
-            {animales.length === 0 && !error && (
-                <p className="text-center text-gray-500 mt-6">No hay animales registrados todavía.</p>
-            )}
         </div>
     );
 }

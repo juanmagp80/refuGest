@@ -2,6 +2,7 @@
 
 import GestionSolicitudesAdopcion from "@/components/GestionSolicitudesAdopcion";
 import { supabase } from "@/lib/supabaseClient";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -23,7 +24,6 @@ export default function DashboardRefugio({ refugio: initialRefugio }) {
     const [vista, setVista] = useState("inicio");
     const [loading, setLoading] = useState(true);
     const [refugio, setRefugio] = useState(initialRefugio);
-
 
     useEffect(() => {
         const fetchAnimales = async () => {
@@ -67,8 +67,8 @@ export default function DashboardRefugio({ refugio: initialRefugio }) {
                 return (
                     <>
                         <section className="mb-12">
-                            <h2 className="text-3xl font-bold text-blue-800 mb-6 flex items-center gap-2">
-                                <FaPaw className="text-blue-500" /> Últimos animales registrados
+                            <h2 className="text-3xl font-bold text-blue-500 mb-6 flex items-center gap-2">
+                                <FaPaw className="text-blue-200" /> Últimos animales registrados
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 {animales.length === 0 ? (
@@ -77,38 +77,29 @@ export default function DashboardRefugio({ refugio: initialRefugio }) {
                                     </p>
                                 ) : (
                                     animales.slice(0, 6).map((a) => (
-                                        <div
-                                            key={a.id}
-                                            className="bg-white border border-blue-200 rounded-2xl p-6 shadow-xl flex items-center gap-6"
-                                        >
-                                            {a.imagen ? (
-                                                <img
-                                                    src={a.imagen}
-                                                    alt={a.name}
-                                                    className="w-24 h-24 object-cover rounded-full border-4 border-blue-300 shadow"
-                                                />
-                                            ) : (
-                                                <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-4xl text-blue-600">
-                                                    {a.especie?.toLowerCase() === "perro" ? (
-                                                        <FaDog />
-                                                    ) : (
-                                                        <FaCat />
-                                                    )}
+                                        <Link href={`/animal/${a.id}`} key={a.id} className="block hover:scale-[1.02] transition-transform">
+                                            <div className="bg-white border border-blue-100 rounded-2xl p-5 shadow-md flex items-center gap-4">
+                                                {a.imagen ? (
+                                                    <img
+                                                        src={a.imagen}
+                                                        alt={a.name}
+                                                        className="w-24 h-24 object-cover rounded-full border-4 border-blue-300 shadow"
+                                                    />
+                                                ) : (
+                                                    <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center text-4xl text-blue-600">
+                                                        {a.especie?.toLowerCase() === "perro" ? <FaDog /> : <FaCat />}
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <h3 className="text-2xl font-bold text-blue-500">{a.name}</h3>
+                                                    <div className="flex flex-wrap gap-2 mt-2">
+                                                        <Badge color="pink">{a.sexo}</Badge>
+                                                        <Badge color="blue">{a.status || "Sin estado"}</Badge>
+                                                    </div>
+                                                    <p className="text-sm text-gray-600 mt-1">Especie: {a.especie || "No definida"}</p>
                                                 </div>
-                                            )}
-                                            <div>
-                                                <h3 className="text-2xl font-bold text-blue-800">
-                                                    {a.name}
-                                                </h3>
-                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                    <Badge color="pink">{a.sexo}</Badge>
-                                                    <Badge color="blue">{a.status || "Sin estado"}</Badge>
-                                                </div>
-                                                <p className="text-sm text-gray-600 mt-1">
-                                                    Especie: {a.especie || "No definida"}
-                                                </p>
                                             </div>
-                                        </div>
+                                        </Link>
                                     ))
                                 )}
                             </div>
@@ -119,20 +110,16 @@ export default function DashboardRefugio({ refugio: initialRefugio }) {
                                 <FaHandsHelping className="text-pink-500" /> Últimos voluntarios añadidos
                             </h2>
                             {voluntarios.length === 0 ? (
-                                <p className="text-center text-gray-500 italic">
-                                    No hay voluntarios añadidos aún.
-                                </p>
+                                <p className="text-center text-gray-500 italic">No hay voluntarios añadidos aún.</p>
                             ) : (
-                                <ul className="space-y-2 text-pink-900 font-medium">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     {voluntarios.map((v) => (
-                                        <li
-                                            key={v.id}
-                                            className="bg-pink-100 px-4 py-2 rounded-xl shadow"
-                                        >
-                                            {v.name}
-                                        </li>
+                                        <div key={v.id} className="bg-white border border-pink-200 rounded-2xl p-4 shadow-md flex items-center gap-4">
+                                            <FaHandsHelping className="text-3xl text-pink-500" />
+                                            <span className="text-pink-800 font-semibold">{v.name}</span>
+                                        </div>
                                     ))}
-                                </ul>
+                                </div>
                             )}
                         </section>
 
@@ -154,20 +141,18 @@ export default function DashboardRefugio({ refugio: initialRefugio }) {
                                     No hay tareas completadas recientemente.
                                 </p>
                             ) : (
-                                <ul className="space-y-2 text-green-900 font-medium">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                     {tareasCompletadas.map((t) => (
-                                        <li
-                                            key={t.id}
-                                            className="bg-green-100 px-4 py-2 rounded-xl shadow"
-                                        >
-                                            {t.titulo}
-                                        </li>
+                                        <div key={t.id} className="bg-white border border-green-200 rounded-2xl p-4 shadow-md">
+                                            <p className="text-green-800 font-semibold">{t.titulo}</p>
+                                        </div>
                                     ))}
-                                </ul>
+                                </div>
                             )}
                         </section>
                     </>
                 );
+
             case "perfil":
                 return <PerfilRefugio refugio={refugio} setRefugio={setRefugio} />;
 
@@ -180,21 +165,17 @@ export default function DashboardRefugio({ refugio: initialRefugio }) {
     };
 
     if (loading)
-        return (
-            <p className="text-center mt-10 text-gray-600">
-                Cargando resumen del refugio...
-            </p>
-        );
+        return <p className="text-center mt-10 text-gray-600">Cargando resumen del refugio...</p>;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-white via-blue-50 to-blue-100 p-6 sm:p-10">
             <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl p-8 sm:p-10 border border-blue-100 ring-1 ring-blue-200">
-                <h1 className="text-4xl sm:text-5xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-red-400 drop-shadow-xl text-center sm:text-left">
+                <h1 className="text-2xl sm:text-3xl font-extrabold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-red-400 drop-shadow-xl text-center sm:text-left">
                     {refugio.name}
                 </h1>
 
                 {/* Menú de navegación */}
-                <nav className="flex flex-wrap gap-4 justify-center sm:justify-start mb-10">
+                <nav className="flex flex-wrap gap-4 justify-center sm:justify-start mb-6">
                     <NavButton
                         active={vista === "inicio"}
                         onClick={() => setVista("inicio")}
@@ -252,9 +233,7 @@ function NavButton({ active, onClick, icon, label, activeColor, inactiveColor })
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-lg shadow-md transition focus:outline-none focus:ring-4 focus:ring-opacity-50 select-none
-        ${active ? activeColor : inactiveColor}
-      `}
+            className={`flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-lg shadow-md transition focus:outline-none focus:ring-4 focus:ring-opacity-50 select-none ${active ? activeColor : inactiveColor}`}
             type="button"
             aria-pressed={active}
         >

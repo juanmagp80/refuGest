@@ -142,7 +142,25 @@ export default function NuevoAnimalPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <Input name="name" icon={<FaIdBadge />} placeholder="Nombre" value={form.name} onChange={handleChange} required />
-                        <Input name="species" icon={<FaDog />} placeholder="Especie" value={form.species} onChange={handleChange} required />
+                        <div className="relative w-full">
+                            <span className="absolute left-3 top-3 text-blue-400"><FaDog /></span>
+                            <select
+                                name="species"
+                                value={form.species}
+                                onChange={handleChange}
+                                required
+                                className="appearance-none text-black border-2 border-blue-200 rounded-lg px-9 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition w-full"
+                            >
+                                <option value="" disabled>Selecciona la especie</option>
+                                <option value="Perro">Perro</option>
+                                <option value="Gato">Gato</option>
+                                <option value="Conejo">Conejo</option>
+                                <option value="Ave">Ave</option>
+                                <option value="Roedor">Roedor</option>
+                                <option value="Reptil">Reptil</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
                         <Input name="breed" icon={<FaInfoCircle />} placeholder="Raza" value={form.breed} onChange={handleChange} />
                         <Input name="edad" icon={<FaCalendarAlt />} placeholder="Edad" value={form.edad} onChange={handleChange} />
                         <Input name="sexo" icon={<FaVenusMars />} placeholder="Sexo" value={form.sexo} onChange={handleChange} />
