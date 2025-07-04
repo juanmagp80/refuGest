@@ -4,7 +4,7 @@ import AnimalesParaAdoptar from "@/components/AnimalesParaAdoptar";
 import FormularioAdopcion from "@/components/FormularioAdopcion";
 import { supabase } from "@/lib/supabaseClient";
 import { useEffect, useState } from "react";
-import { FaFolderOpen, FaListAlt, FaPaw } from "react-icons/fa";
+import { FaFolderOpen, FaListAlt, FaPaw, FaSignOutAlt } from "react-icons/fa";
 
 export default function DashboardAdoptante({ adoptante }) {
     const [vista, setVista] = useState("animales");
@@ -41,7 +41,10 @@ export default function DashboardAdoptante({ adoptante }) {
             setRefugioSeleccionado(null);
         }
     }, [provinciaSeleccionada]);
-
+    const handleLogout = async () => {
+        await supabase.auth.signOut();
+        window.location.href = "/login";
+    };
     const fetchProvincias = async () => {
         const { data, error } = await supabase
             .from("refugios")
@@ -244,8 +247,17 @@ export default function DashboardAdoptante({ adoptante }) {
                         </ul>
                     </div>
                 )}
+                <button
+                    onClick={handleLogout}
+                    className="mt-8 flex items-center gap-2 bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 hover:from-red-600 hover:via-pink-600 hover:to-purple-600 text-white px-5 py-2 rounded-xl font-bold shadow-lg transition-transform duration-200 transform hover:scale-105"
+                    type="button"
+                    aria-label="Cerrar sesión"
+                >
+                    <FaSignOutAlt /> Cerrar sesión
+                </button>
             </div>
         </div>
+
     );
 }
 
