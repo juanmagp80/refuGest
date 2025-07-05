@@ -10,9 +10,18 @@ function PerfilRefugio({ refugio, setRefugio }) {
         provincia: refugio.provincia || "",
         logo_url: refugio.logo_url || "",
         banner_url: refugio.banner_url || "",
-        redes_sociales: refugio.redes_sociales || {},
+        redes_sociales: refugio.redes_sociales || "",
         info_lateral: refugio.info_lateral || "",
         teaming_url: refugio.teaming_url || "",
+        asociacion: refugio.asociacion || "",
+        albergue: refugio.albergue || "",
+        manuales: refugio.manuales || "",
+        colaboradores: refugio.colaboradores || "",
+        calendario: refugio.calendario || "",
+        web: refugio.web || "",
+        facebook: refugio.facebook || "",
+        instagram: refugio.instagram || "",
+        email_red: refugio.email_red || "",
     });
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState(null);
@@ -57,31 +66,9 @@ function PerfilRefugio({ refugio, setRefugio }) {
         setUploading(false);
     };
 
-    // Para simplificar, solo haremos inputs tipo texto. Puedes mejorar luego.
-
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((f) => ({ ...f, [name]: value }));
-    };
-    const subirImagen = async (file, tipo) => {
-        const nombreArchivo = `${tipo}-${refugio.id}-${Date.now()}`;
-
-        const { data, error } = await supabase.storage
-            .from("refugio-images") // Asegúrate de que este bucket exista en Supabase
-            .upload(nombreArchivo, file);
-
-        if (error) throw error;
-
-        const { data: urlData } = supabase.storage
-            .from("refugio-images")
-            .getPublicUrl(nombreArchivo);
-
-        if (urlData?.publicUrl) {
-            setFormData((f) => ({
-                ...f,
-                [`${tipo}_url`]: urlData.publicUrl,
-            }));
-        }
     };
 
     const handleSave = async () => {
@@ -93,7 +80,7 @@ function PerfilRefugio({ refugio, setRefugio }) {
                 .update({
                     name: formData.name,
                     description: formData.description,
-                    descripcion: formData.description, // para mantener compatibilidad con tu tabla
+                    descripcion: formData.description,
                     location: formData.location,
                     contact_info: formData.contact_info,
                     provincia: formData.provincia,
@@ -102,14 +89,21 @@ function PerfilRefugio({ refugio, setRefugio }) {
                     redes_sociales: formData.redes_sociales,
                     info_lateral: formData.info_lateral,
                     teaming_url: formData.teaming_url,
+                    asociacion: formData.asociacion,
+                    albergue: formData.albergue,
+                    manuales: formData.manuales,
+                    colaboradores: formData.colaboradores,
+                    calendario: formData.calendario,
+                    web: formData.web,
+                    facebook: formData.facebook,
+                    instagram: formData.instagram,
+                    email_red: formData.email_red,
                 })
                 .eq("id", refugio.id);
 
             if (error) throw error;
 
             setMsg({ type: "success", text: "Perfil actualizado correctamente." });
-
-            // Actualizamos el estado global del refugio con los datos nuevos
             setRefugio((old) => ({ ...old, ...formData }));
         } catch (error) {
             setMsg({ type: "error", text: "Error al actualizar el perfil: " + error.message });
@@ -258,8 +252,6 @@ function PerfilRefugio({ refugio, setRefugio }) {
                 </div>
             </div>
 
-
-
             <label className="block">
                 <span className="font-semibold">Información lateral (texto)</span>
                 <textarea
@@ -280,6 +272,122 @@ function PerfilRefugio({ refugio, setRefugio }) {
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
                     placeholder="https://..."
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Asociación (quiénes somos)</span>
+                <textarea
+                    name="asociacion"
+                    value={formData.asociacion}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    rows={2}
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Redes sociales (JSON o texto)</span>
+                <textarea
+                    name="redes_sociales"
+                    value={formData.redes_sociales}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    rows={2}
+                    placeholder='Ejemplo: {"facebook":"https://facebook.com/mi-refugio","instagram":"https://instagram.com/mi-refugio"}'
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Nuestro albergue</span>
+                <textarea
+                    name="albergue"
+                    value={formData.albergue}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    rows={2}
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Manuales de ayuda</span>
+                <textarea
+                    name="manuales"
+                    value={formData.manuales}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    rows={2}
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Profesionales colaboradores</span>
+                <textarea
+                    name="colaboradores"
+                    value={formData.colaboradores}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    rows={2}
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Calendario de Google (URL)</span>
+                <input
+                    type="text"
+                    name="calendario"
+                    value={formData.calendario}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="URL del calendario"
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Web</span>
+                <input
+                    type="text"
+                    name="web"
+                    value={formData.web}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="Web (opcional)"
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Facebook</span>
+                <input
+                    type="text"
+                    name="facebook"
+                    value={formData.facebook}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="Facebook (opcional)"
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Instagram</span>
+                <input
+                    type="text"
+                    name="instagram"
+                    value={formData.instagram}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="Instagram (opcional)"
+                />
+            </label>
+
+            <label className="block">
+                <span className="font-semibold">Email de contacto</span>
+                <input
+                    type="text"
+                    name="email_red"
+                    value={formData.email_red}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="Email de contacto (opcional)"
                 />
             </label>
 

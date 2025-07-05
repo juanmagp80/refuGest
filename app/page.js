@@ -97,13 +97,13 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-200 via-purple-200 to-pink-300 flex flex-col items-center py-10">
-      <header
-        className="w-full font-poppins max-w-5xl bg-center py-22 px-8 rounded-lg shadow-xl mb-18"
-        style={{ backgroundImage: "url('/cabecera.png')" }}
-      ></header>
+    <div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100 flex flex-col items-center py-10 font-sans">
+      <header className="w-full max-w-5xl bg-white border-b border-gray-200 shadow-sm py-6 px-8 rounded-t-2xl flex items-center justify-between mb-10">
+        <span className="text-2xl font-bold text-blue-800 tracking-tight">RefugeST3</span>
+        <span className="text-gray-500 text-sm">Gestión de adopciones</span>
+      </header>
 
-      <div className="w-full max-w-3xl flex flex-col items-center gap-6 mb-12">
+      <div className="w-full max-w-4xl flex flex-col items-center gap-8 mb-12">
 
         {/* Botones Login / Logout */}
         <div className="w-full flex justify-between max-w-3xl mb-6">
@@ -130,15 +130,15 @@ export default function HomePage() {
         </div>
 
         {/* Selector Provincia / Refugio */}
-        <div className="bg-white p-8 rounded-2xl shadow-lg w-full flex flex-col gap-6 mb-6">
-          <h2 className="text-3xl font-semibold text-blue-700 text-center font-poppins">Selecciona tu Refugio</h2>
+        <div className="bg-white p-8 rounded-xl shadow-lg w-full flex flex-col gap-6 mb-6 border border-gray-200">
+          <h2 className="text-2xl font-semibold text-blue-700 text-center">Selecciona tu Refugio</h2>
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
             <div className="flex flex-col">
               <label className="font-semibold text-blue-600 mb-1 flex items-center gap-2">
                 <FaMapMarkerAlt /> Provincia
               </label>
               <select
-                className="border-2 border-blue-200 rounded-lg px-6 py-3 text-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+                className="border border-blue-200 rounded-lg px-6 py-3 text-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                 value={provinciaSeleccionada}
                 onChange={e => {
                   setProvinciaSeleccionada(e.target.value);
@@ -158,7 +158,7 @@ export default function HomePage() {
                 <FaHome /> Refugio
               </label>
               <select
-                className="border-2 border-purple-200 rounded-lg px-6 py-3 text-black focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
+                className="border border-purple-200 rounded-lg px-6 py-3 text-black focus:outline-none focus:ring-2 focus:ring-purple-400 transition"
                 value={refugioSeleccionado}
                 onChange={e => {
                   const id = e.target.value;
@@ -172,27 +172,26 @@ export default function HomePage() {
                   <option key={ref.id} value={ref.id}>{ref.name}</option>
                 ))}
               </select>
-
             </div>
           </div>
         </div>
 
         {/* Animales Destacados */}
-        <div className="w-full max-w-3xl bg-white p-8 rounded-2xl shadow-lg">
-          <h3 className="text-2xl font-semibold text-blue-700 text-center font-poppins">Animales Buscando Hogar</h3>
+        <div className="w-full max-w-4xl bg-white p-8 rounded-xl shadow-lg border border-gray-200">
+          <h3 className="text-xl font-semibold text-blue-700 text-center">Animales Buscando Hogar</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
             {animales.length > 0 ? animales.map(animal => (
               <div
                 key={animal.id}
                 onClick={() => router.push(`/animal/${animal.id}`)}
-                className="group bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-2xl shadow-xl p-6 flex flex-col items-center gap-3 border border-blue-100 hover:scale-105 hover:shadow-2xl transition-transform duration-200 cursor-pointer relative overflow-hidden"
+                className="group bg-gradient-to-br from-gray-50 via-gray-100 to-gray-50 rounded-xl shadow-md p-6 flex flex-col items-center gap-3 border border-gray-100 hover:scale-105 hover:shadow-xl transition-transform duration-200 cursor-pointer relative overflow-hidden"
               >
                 <img
                   src={animal.imagen || "/images/default-animal.jpg"}
                   alt={animal.name}
-                  className="w-32 h-32 object-cover rounded-full border-4 border-blue-300 shadow-lg group-hover:scale-110 transition-transform duration-300"
+                  className="w-28 h-28 object-cover rounded-full border-4 border-blue-200 shadow group-hover:scale-110 transition-transform duration-300"
                 />
-                <div className="text-xl font-bold text-blue-700 text-center">{animal.name}</div>
+                <div className="text-lg font-bold text-blue-700 text-center">{animal.name}</div>
                 <div className="text-purple-600 font-semibold text-center">{animal.breed}</div>
                 <div className="text-gray-600 text-center line-clamp-2">{animal.descripcion}</div>
                 <span
@@ -225,8 +224,8 @@ export default function HomePage() {
 
         <div className={`overflow-hidden transition-all duration-1000 ease-in-out transform ${mostrarHistorias ? "max-h-screen opacity-100 scale-100" : "max-h-0 opacity-0 scale-90"}`}>
           {mostrarHistorias && (
-            <div className="bg-white/90 rounded-3xl shadow-xl p-8 w-full max-w-3xl flex flex-col gap-6 border-2 border-blue-200 animate-slide-up mt-4">
-              <h2 className="text-3xl font-extrabold text-blue-700 flex items-center gap-3 justify-center drop-shadow-lg">
+            <div className="bg-white/95 rounded-2xl shadow-xl p-8 w-full max-w-4xl flex flex-col gap-6 border border-blue-100 animate-slide-up mt-4">
+              <h2 className="text-2xl font-extrabold text-blue-700 flex items-center gap-3 justify-center drop-shadow-lg">
                 <FaHeart /> Historias de Éxito
               </h2>
               <div className="flex flex-col gap-6">
@@ -235,7 +234,7 @@ export default function HomePage() {
                     <img
                       src={historia.imagen || "/images/default-adopted.jpg"}
                       alt={historia.nombre}
-                      className="w-28 h-28 object-cover rounded-full border-4 border-blue-300 shadow-lg"
+                      className="w-24 h-24 object-cover rounded-full border-4 border-blue-200 shadow"
                     />
                     <div>
                       <p className="text-lg font-semibold">{historia.nombre}</p>

@@ -33,6 +33,12 @@ export default function RegisterPage() {
         email_red: "",
         teaming_url: "",
         info_lateral: "",
+        asociacion: "",
+        redes_sociales: "",
+        albergue: "",
+        manuales: "",
+        colaboradores: "",
+        calendario: "",
     });
 
     const [error, setError] = useState(null);
@@ -181,11 +187,25 @@ export default function RegisterPage() {
             user_id: user.id,
         };
 
-        if (form.user_type === "refugio") insertData.location = form.provincia;
+        if (form.user_type === "refugio") {
+            insertData.location = form.provincia;
+            insertData.logo_url = form.logo_url;
+            insertData.banner_url = form.banner_url;
+            insertData.descripcion = form.descripcion;
+            insertData.web = form.web;
+            insertData.facebook = form.facebook;
+            insertData.instagram = form.instagram;
+            insertData.email_red = form.email_red;
+            insertData.teaming_url = form.teaming_url;
+            insertData.info_lateral = form.info_lateral;
+            insertData.asociacion = form.asociacion;
+            insertData.redes_sociales = form.redes_sociales;
+            insertData.albergue = form.albergue;
+            insertData.manuales = form.manuales;
+            insertData.colaboradores = form.colaboradores;
+            insertData.calendario = form.calendario;
+        }
         if (form.user_type === "voluntario") insertData.refugio_id = form.refugio_id;
-
-        if (form.logo_url) insertData.logo_url = form.logo_url;
-        if (form.banner_url) insertData.banner_url = form.banner_url;
 
         const { error: insertError } = await supabase.from(tableName).insert([insertData]);
 
@@ -384,7 +404,96 @@ export default function RegisterPage() {
                             />
                         </div>
 
-                        {/* Redes sociales */}
+                        {/* Asociación */}
+                        <div>
+                            <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                Asociación (quiénes somos)
+                            </label>
+                            <textarea
+                                name="asociacion"
+                                placeholder="Información sobre la asociación..."
+                                value={form.asociacion}
+                                onChange={handleChange}
+                                rows={2}
+                                className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
+                            />
+                        </div>
+
+                        {/* Redes sociales (JSON o texto) */}
+                        <div>
+                            <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                Redes sociales (JSON o texto)
+                            </label>
+                            <textarea
+                                name="redes_sociales"
+                                placeholder='Ejemplo: {"facebook":"https://facebook.com/mi-refugio","instagram":"https://instagram.com/mi-refugio"}'
+                                value={form.redes_sociales}
+                                onChange={handleChange}
+                                rows={2}
+                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                            />
+                        </div>
+
+                        {/* Nuestro albergue */}
+                        <div>
+                            <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                Nuestro albergue
+                            </label>
+                            <textarea
+                                name="albergue"
+                                placeholder="Información sobre el albergue..."
+                                value={form.albergue}
+                                onChange={handleChange}
+                                rows={2}
+                                className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
+                            />
+                        </div>
+
+                        {/* Manuales */}
+                        <div>
+                            <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                Manuales de ayuda
+                            </label>
+                            <textarea
+                                name="manuales"
+                                placeholder="Manuales, enlaces, recursos..."
+                                value={form.manuales}
+                                onChange={handleChange}
+                                rows={2}
+                                className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
+                            />
+                        </div>
+
+                        {/* Colaboradores */}
+                        <div>
+                            <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                Profesionales colaboradores
+                            </label>
+                            <textarea
+                                name="colaboradores"
+                                placeholder="Veterinarios, educadores, etc..."
+                                value={form.colaboradores}
+                                onChange={handleChange}
+                                rows={2}
+                                className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
+                            />
+                        </div>
+
+                        {/* Calendario */}
+                        <div>
+                            <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                Calendario de Google (URL)
+                            </label>
+                            <input
+                                name="calendario"
+                                placeholder="URL del calendario"
+                                value={form.calendario}
+                                onChange={handleChange}
+                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                            />
+                        </div>
+
+                        {/* Web, Facebook, Instagram, Email, Teaming */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <input
                                 name="web"
@@ -414,10 +523,14 @@ export default function RegisterPage() {
                                 onChange={handleChange}
                                 className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
                             />
+                            <input
+                                name="teaming_url"
+                                placeholder="Teaming (opcional)"
+                                value={form.teaming_url}
+                                onChange={handleChange}
+                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                            />
                         </div>
-
-                        {/* Teaminig */}
-
 
                         {/* Info lateral */}
                         <div>
