@@ -22,6 +22,13 @@ function PerfilRefugio({ refugio, setRefugio }) {
         facebook: refugio.facebook || "",
         instagram: refugio.instagram || "",
         email_red: refugio.email_red || "",
+        adopta: refugio.adopta || "",
+        socio: refugio.socio || "",
+        voluntario: refugio.voluntario || "",
+        difunde: refugio.difunde || "",
+        dona: refugio.dona || ""
+
+
     });
     const [saving, setSaving] = useState(false);
     const [msg, setMsg] = useState(null);
@@ -98,6 +105,12 @@ function PerfilRefugio({ refugio, setRefugio }) {
                     facebook: formData.facebook,
                     instagram: formData.instagram,
                     email_red: formData.email_red,
+                    adopta: formData.adopta,
+                    socio: formData.socio,
+                    voluntario: formData.voluntario,
+                    difunde: formData.difunde,
+                    dona: formData.dona,
+
                 })
                 .eq("id", refugio.id);
 
@@ -388,6 +401,61 @@ function PerfilRefugio({ refugio, setRefugio }) {
                     onChange={handleChange}
                     className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
                     placeholder="Email de contacto (opcional)"
+                />
+            </label>
+            <label className="block">
+                <span className="font-semibold">Adopta</span>
+                <input
+                    type="text"
+                    name="adopta"
+                    value={formData.adopta}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="Texto para sección Adopta"
+                />
+            </label>
+            <label className="block">
+                <span className="font-semibold">Socio</span>
+                <input
+                    type="text"
+                    name="socio"
+                    value={formData.socio}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="Texto para sección Socio"
+                />
+            </label>
+            <label className="block">
+                <span className="font-semibold">Voluntario</span>
+                <input
+                    type="text"
+                    name="voluntario"
+                    value={formData.voluntario}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="Texto para sección Voluntario"
+                />
+            </label>
+            <label className="block">
+                <span className="font-semibold">Difunde</span>
+                <input
+                    type="text"
+                    name="difunde"
+                    value={formData.difunde}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="Texto para sección Difunde"
+                />
+            </label>
+            <label className="block">
+                <span className="font-semibold">Dona</span>
+                <input
+                    type="text"
+                    name="dona"
+                    value={formData.dona}
+                    onChange={handleChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 mt-1"
+                    placeholder="Texto para sección Dona"
                 />
             </label>
 

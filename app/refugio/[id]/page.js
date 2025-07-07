@@ -118,6 +118,52 @@ export default function RefugioPage() {
                         )}
                     </section>
                 );
+            case "adopta":
+                return (
+                    <section>
+                        <h2 className="text-xl font-bold text-orange-700 mb-2">Adopta o acoge</h2>
+                        <p className="text-gray-700 whitespace-pre-line">
+                            {refugio.adopta || "Información sobre adopciones no disponible."}
+                        </p>
+                    </section>
+                );
+            case "socio":
+                return (
+                    <section>
+                        <h2 className="text-xl font-bold text-orange-700 mb-2">Hazte socio o padrino</h2>
+                        <p className="text-gray-700 whitespace-pre-line">
+                            {refugio.socio || "Información sobre socios o padrinos no disponible."}
+                        </p>
+                    </section>
+                );
+            case "voluntario":
+                return (
+                    <section>
+                        <h2 className="text-xl font-bold text-orange-700 mb-2">Hazte voluntario</h2>
+                        <p className="text-gray-700 whitespace-pre-line">
+                            {refugio.voluntario || "Información sobre voluntariado no disponible."}
+                        </p>
+                    </section>
+                );
+            case "difunde":
+                return (
+                    <section>
+                        <h2 className="text-xl font-bold text-orange-700 mb-2">Difunde</h2>
+                        <p className="text-gray-700 whitespace-pre-line">
+                            {refugio.difunde || "Información sobre difusión no disponible."}
+                        </p>
+                    </section>
+                );
+            case "dona":
+                return (
+                    <section>
+                        <h2 className="text-xl font-bold text-orange-700 mb-2">Dona</h2>
+                        <p className="text-gray-700 whitespace-pre-line">
+                            {refugio.dona || "Información sobre donaciones no disponible."}
+                        </p>
+                    </section>
+                );
+
             case "principal":
             default:
                 return (
@@ -183,6 +229,7 @@ export default function RefugioPage() {
                         <li><button onClick={() => setSeccion("colaboradores")}>Profesionales colaboradores</button></li>
                         <li><button onClick={() => setSeccion("contacto")}>Contacto</button></li>
                         <li><button onClick={() => setSeccion("calendario")}>Calendario de Google</button></li>
+
                     </ul>
                 </div>
             </aside>
@@ -191,11 +238,11 @@ export default function RefugioPage() {
             <aside className="hidden lg:flex flex-col fixed top-0 right-0 h-full w-60 bg-orange-100 border-l border-orange-300 px-4 py-6 z-30 text-sm overflow-y-auto">
                 <h3 className="text-lg font-bold text-orange-700 mb-4">Ayúdanos</h3>
                 <ul className="space-y-3 font-semibold text-orange-800">
-                    <li><a href="#adopta" className="hover:underline">Adopta o acoge</a></li>
-                    <li><a href="#socio" className="hover:underline">Hazte socio o padrino</a></li>
-                    <li><a href="#voluntario" className="hover:underline">Hazte voluntario</a></li>
-                    <li><a href="#difunde" className="hover:underline">Difunde</a></li>
-                    <li><a href="#dona" className="hover:underline">Dona</a></li>
+                    <li><button onClick={() => setSeccion("adopta")} className="hover:underline">Adopta o acoge</button></li>
+                    <li><button onClick={() => setSeccion("socio")} className="hover:underline">Hazte socio o padrino</button></li>
+                    <li><button onClick={() => setSeccion("voluntario")} className="hover:underline">Hazte voluntario</button></li>
+                    <li><button onClick={() => setSeccion("difunde")} className="hover:underline">Difunde</button></li>
+                    <li><button onClick={() => setSeccion("dona")} className="hover:underline">Dona</button></li>
                 </ul>
             </aside>
 

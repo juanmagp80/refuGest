@@ -39,12 +39,18 @@ export default function RegisterPage() {
         manuales: "",
         colaboradores: "",
         calendario: "",
+        adopta: "",
+        socio: "",
+        voluntario: "",
+        difunde: "",
+        dona: ""
     });
 
     const [error, setError] = useState(null);
     const [refugios, setRefugios] = useState([]);
     const [animales, setAnimales] = useState([]);
     const [popup, setPopup] = useState({ visible: false, type: "", message: "" });
+    const [currentStep, setCurrentStep] = useState(1);
 
     const provincias = [
         "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila",
@@ -98,7 +104,13 @@ export default function RegisterPage() {
     }, [form.refugio_id, form.user_type]);
 
     const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
+        const { name, value } = e.target;
+        setForm({ ...form, [name]: value });
+
+        // Resetear el paso si cambia el tipo de usuario
+        if (name === "user_type") {
+            setCurrentStep(1);
+        }
     };
 
     async function handleFileUpload(e, field) {
@@ -148,6 +160,17 @@ export default function RegisterPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError(null);
+
+        // Validaciones básicas
+        if (form.password.length < 6) {
+            mostrarPopup("error", "La contraseña debe tener al menos 6 caracteres");
+            return;
+        }
+
+        if (form.user_type === "voluntario" && !form.refugio_id) {
+            mostrarPopup("error", "Debes seleccionar un refugio");
+            return;
+        }
 
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
             email: form.email,
@@ -204,6 +227,12 @@ export default function RegisterPage() {
             insertData.manuales = form.manuales;
             insertData.colaboradores = form.colaboradores;
             insertData.calendario = form.calendario;
+            insertData.adopta = form.adopta;
+            insertData.socio = form.socio;
+            insertData.voluntario = form.voluntario;
+            insertData.difunde = form.difunde;
+            insertData.dona = form.dona;
+
         }
         if (form.user_type === "voluntario") insertData.refugio_id = form.refugio_id;
 
@@ -235,7 +264,7 @@ export default function RegisterPage() {
 
             <form
                 onSubmit={handleSubmit}
-                className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-10 w-full max-w-md flex flex-col gap-6 border-2 border-blue-200 animate-slide-up"
+                className="bg-white/90 backdrop-blur-lg rounded-3xl shadow-2xl p-10 w-full max-w-4xl flex flex-col gap-6 border-2 border-blue-200 animate-slide-up max-h-screen overflow-y-auto"
             >
                 <div className="flex flex-col items-center gap-2 mb-2">
                     <FaPaw className="text-4xl text-pink-500 drop-shadow" />
@@ -331,221 +360,323 @@ export default function RegisterPage() {
                 {/* Condicional refugio */}
                 {form.user_type === "refugio" && (
                     <>
-                        {/* Logo */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">Logo del refugio (sube tu imagen)</label>
-                            <label
-                                htmlFor="logo-upload"
-                                className="inline-block cursor-pointer bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-5 py-2 rounded font-semibold shadow-lg transition duration-300 select-none"
-                            >
-                                Seleccionar imagen
-                            </label>
-                            <input
-                                id="logo-upload"
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleFileUpload(e, "logo_url")}
-                                className="hidden"
-                            />
+                        {/* Indicador de pasos */}
+                        <div className="flex justify-center mb-6">
+                            <div className="flex items-center space-x-4">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${currentStep === 1 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>1</div>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${currentStep === 2 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>2</div>
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${currentStep === 3 ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'}`}>3</div>
+                            </div>
+                        </div>
 
-                            {form.logo_url && (
-                                <div className="flex justify-center mt-2">
-                                    <img
-                                        src={form.logo_url}
-                                        alt="Logo del refugio"
-                                        className="w-24 h-24 object-contain border-4 border-blue-300 rounded-full shadow"
+                        {/* Paso 1: Información básica */}
+                        {currentStep === 1 && (
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-700 text-center">Información básica</h3>
+
+                                {/* Logo */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">Logo del refugio (sube tu imagen)</label>
+                                    <label
+                                        htmlFor="logo-upload"
+                                        className="inline-block cursor-pointer bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-5 py-2 rounded font-semibold shadow-lg transition duration-300 select-none"
+                                    >
+                                        Seleccionar imagen
+                                    </label>
+                                    <input
+                                        id="logo-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleFileUpload(e, "logo_url")}
+                                        className="hidden"
+                                    />
+
+                                    {form.logo_url && (
+                                        <div className="flex justify-center mt-2">
+                                            <img
+                                                src={form.logo_url}
+                                                alt="Logo del refugio"
+                                                className="w-24 h-24 object-contain border-4 border-blue-300 rounded-full shadow"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Banner */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                        Banner principal (sube tu imagen)
+                                    </label>
+                                    <label
+                                        htmlFor="banner-upload"
+                                        className="inline-block cursor-pointer bg-gradient-to-r from-green-400 via-teal-400 to-cyan-500 hover:from-green-500 hover:via-teal-500 hover:to-cyan-600 text-white px-5 py-2 rounded font-semibold shadow-lg transition duration-300 select-none"
+                                    >
+                                        Seleccionar imagen
+                                    </label>
+                                    <input
+                                        id="banner-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleFileUpload(e, "banner_url")}
+                                        className="hidden"
+                                    />
+
+                                    {form.banner_url && (
+                                        <div className="flex justify-center mt-2">
+                                            <img
+                                                src={form.banner_url}
+                                                alt="Banner principal"
+                                                className="w-full max-h-40 object-contain rounded-lg shadow"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Descripción */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                        Descripción del refugio
+                                    </label>
+                                    <textarea
+                                        name="descripcion"
+                                        placeholder="Somos un refugio con más de 20 años de experiencia..."
+                                        value={form.descripcion}
+                                        onChange={handleChange}
+                                        rows={3}
+                                        className="border-2 border-blue-200 rounded-lg py-2 px-3 w-full text-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
                                     />
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Banner */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">
-                                Banner principal (sube tu imagen)
-                            </label>
-                            <label
-                                htmlFor="banner-upload"
-                                className="inline-block cursor-pointer bg-gradient-to-r from-green-400 via-teal-400 to-cyan-500 hover:from-green-500 hover:via-teal-500 hover:to-cyan-600 text-white px-5 py-2 rounded font-semibold shadow-lg transition duration-300 select-none"
-                            >
-                                Seleccionar imagen
-                            </label>
-                            <input
-                                id="banner-upload"
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleFileUpload(e, "banner_url")}
-                                className="hidden"
-                            />
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentStep(2)}
+                                    className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200"
+                                >
+                                    Siguiente
+                                </button>
+                            </div>
+                        )}
 
-                            {form.banner_url && (
-                                <div className="flex justify-center mt-2">
-                                    <img
-                                        src={form.banner_url}
-                                        alt="Banner principal"
-                                        className="w-full max-h-40 object-contain rounded-lg shadow"
+                        {/* Paso 2: Información detallada */}
+                        {currentStep === 2 && (
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-700 text-center">Información detallada</h3>
+
+                                {/* Asociación */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                        Asociación (quiénes somos)
+                                    </label>
+                                    <textarea
+                                        name="asociacion"
+                                        placeholder="Información sobre la asociación..."
+                                        value={form.asociacion}
+                                        onChange={handleChange}
+                                        rows={2}
+                                        className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
                                     />
                                 </div>
-                            )}
-                        </div>
 
-                        {/* Descripción */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">
-                                Descripción del refugio
-                            </label>
-                            <textarea
-                                name="descripcion"
-                                placeholder="Somos un refugio con más de 20 años de experiencia..."
-                                value={form.descripcion}
-                                onChange={handleChange}
-                                rows={3}
-                                className="border-2 border-blue-200 rounded-lg py-2 px-3 w-full text-black focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
-                            />
-                        </div>
+                                {/* Nuestro albergue */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                        Nuestro albergue
+                                    </label>
+                                    <textarea
+                                        name="albergue"
+                                        placeholder="Información sobre el albergue..."
+                                        value={form.albergue}
+                                        onChange={handleChange}
+                                        rows={2}
+                                        className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                </div>
 
-                        {/* Asociación */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">
-                                Asociación (quiénes somos)
-                            </label>
-                            <textarea
-                                name="asociacion"
-                                placeholder="Información sobre la asociación..."
-                                value={form.asociacion}
-                                onChange={handleChange}
-                                rows={2}
-                                className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                        </div>
+                                {/* Manuales */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                        Manuales de ayuda
+                                    </label>
+                                    <textarea
+                                        name="manuales"
+                                        placeholder="Manuales, enlaces, recursos..."
+                                        value={form.manuales}
+                                        onChange={handleChange}
+                                        rows={2}
+                                        className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                </div>
 
-                        {/* Redes sociales (JSON o texto) */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">
-                                Redes sociales (JSON o texto)
-                            </label>
-                            <textarea
-                                name="redes_sociales"
-                                placeholder='Ejemplo: {"facebook":"https://facebook.com/mi-refugio","instagram":"https://instagram.com/mi-refugio"}'
-                                value={form.redes_sociales}
-                                onChange={handleChange}
-                                rows={2}
-                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                        </div>
+                                {/* Colaboradores */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                        Profesionales colaboradores
+                                    </label>
+                                    <textarea
+                                        name="colaboradores"
+                                        placeholder="Veterinarios, educadores, etc..."
+                                        value={form.colaboradores}
+                                        onChange={handleChange}
+                                        rows={2}
+                                        className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                </div>
 
-                        {/* Nuestro albergue */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">
-                                Nuestro albergue
-                            </label>
-                            <textarea
-                                name="albergue"
-                                placeholder="Información sobre el albergue..."
-                                value={form.albergue}
-                                onChange={handleChange}
-                                rows={2}
-                                className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                        </div>
+                                {/* Info lateral */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                        Texto lateral (HTML o texto plano)
+                                    </label>
+                                    <textarea
+                                        name="info_lateral"
+                                        placeholder="Texto informativo que se mostrará en la barra lateral..."
+                                        value={form.info_lateral}
+                                        onChange={handleChange}
+                                        rows={4}
+                                        className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                </div>
 
-                        {/* Manuales */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">
-                                Manuales de ayuda
-                            </label>
-                            <textarea
-                                name="manuales"
-                                placeholder="Manuales, enlaces, recursos..."
-                                value={form.manuales}
-                                onChange={handleChange}
-                                rows={2}
-                                className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                        </div>
+                                <div className="flex space-x-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentStep(1)}
+                                        className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200"
+                                    >
+                                        Anterior
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setCurrentStep(3)}
+                                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200"
+                                    >
+                                        Siguiente
+                                    </button>
+                                </div>
+                            </div>
+                        )}
 
-                        {/* Colaboradores */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">
-                                Profesionales colaboradores
-                            </label>
-                            <textarea
-                                name="colaboradores"
-                                placeholder="Veterinarios, educadores, etc..."
-                                value={form.colaboradores}
-                                onChange={handleChange}
-                                rows={2}
-                                className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                        </div>
+                        {/* Paso 3: Contacto y redes sociales */}
+                        {currentStep === 3 && (
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-gray-700 text-center">Contacto y redes sociales</h3>
 
-                        {/* Calendario */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">
-                                Calendario de Google (URL)
-                            </label>
-                            <input
-                                name="calendario"
-                                placeholder="URL del calendario"
-                                value={form.calendario}
-                                onChange={handleChange}
-                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                        </div>
+                                {/* Redes sociales (JSON o texto) */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                        Redes sociales (JSON o texto)
+                                    </label>
+                                    <textarea
+                                        name="redes_sociales"
+                                        placeholder='Ejemplo: {"facebook":"https://facebook.com/mi-refugio","instagram":"https://instagram.com/mi-refugio"}'
+                                        value={form.redes_sociales}
+                                        onChange={handleChange}
+                                        rows={2}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                </div>
 
-                        {/* Web, Facebook, Instagram, Email, Teaming */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <input
-                                name="web"
-                                placeholder="Web (opcional)"
-                                value={form.web}
-                                onChange={handleChange}
-                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                            <input
-                                name="facebook"
-                                placeholder="Facebook (opcional)"
-                                value={form.facebook}
-                                onChange={handleChange}
-                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                            <input
-                                name="instagram"
-                                placeholder="Instagram (opcional)"
-                                value={form.instagram}
-                                onChange={handleChange}
-                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                            <input
-                                name="email_red"
-                                placeholder="Email de contacto (opcional)"
-                                value={form.email_red}
-                                onChange={handleChange}
-                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                            <input
-                                name="teaming_url"
-                                placeholder="Teaming (opcional)"
-                                value={form.teaming_url}
-                                onChange={handleChange}
-                                className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                        </div>
+                                {/* Calendario */}
+                                <div>
+                                    <label className="block mb-1 font-semibold text-sm text-gray-600">
+                                        Calendario de Google (URL)
+                                    </label>
+                                    <input
+                                        name="calendario"
+                                        placeholder="URL del calendario"
+                                        value={form.calendario}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                </div>
 
-                        {/* Info lateral */}
-                        <div>
-                            <label className="block mb-1 font-semibold text-sm text-gray-600">
-                                Texto lateral (HTML o texto plano)
-                            </label>
-                            <textarea
-                                name="info_lateral"
-                                placeholder="Texto informativo que se mostrará en la barra lateral..."
-                                value={form.info_lateral}
-                                onChange={handleChange}
-                                rows={4}
-                                className="border-2 border-orange-200 rounded-lg py-2 px-3 w-full text-black"
-                            />
-                        </div>
+                                {/* Web, Facebook, Instagram, Email, Teaming */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <input
+                                        name="web"
+                                        placeholder="Web (opcional)"
+                                        value={form.web}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                    <input
+                                        name="facebook"
+                                        placeholder="Facebook (opcional)"
+                                        value={form.facebook}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                    <input
+                                        name="instagram"
+                                        placeholder="Instagram (opcional)"
+                                        value={form.instagram}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                    <input
+                                        name="email_red"
+                                        placeholder="Email de contacto (opcional)"
+                                        value={form.email_red}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                    <input
+                                        name="teaming_url"
+                                        placeholder="Teaming (opcional)"
+                                        value={form.teaming_url}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                </div>
+
+                                {/* Opciones adicionales */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    <input
+                                        name="adopta"
+                                        placeholder="Adopta (opcional)"
+                                        value={form.adopta}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                    <input
+                                        name="socio"
+                                        placeholder="Socio (opcional)"
+                                        value={form.socio}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                    <input
+                                        name="voluntario"
+                                        placeholder="Voluntario (opcional)"
+                                        value={form.voluntario}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                    <input
+                                        name="difunde"
+                                        placeholder="Difunde (opcional)"
+                                        value={form.difunde}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                    <input
+                                        name="dona"
+                                        placeholder="Dona (opcional)"
+                                        value={form.dona}
+                                        onChange={handleChange}
+                                        className="border-2 border-indigo-200 rounded-lg py-2 px-3 w-full text-black"
+                                    />
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setCurrentStep(2)}
+                                    className="w-full bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200"
+                                >
+                                    Anterior
+                                </button>
+                            </div>
+                        )}
                     </>
                 )}
 
@@ -585,12 +716,15 @@ export default function RegisterPage() {
 
                 {error && <div className="text-red-600 text-center font-semibold">{error}</div>}
 
-                <button
-                    type="submit"
-                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
-                >
-                    Registrarse
-                </button>
+                {/* Botón de registro - solo mostrar si no es refugio o si es refugio y está en el paso 3 */}
+                {(form.user_type !== "refugio" || currentStep === 3) && (
+                    <button
+                        type="submit"
+                        className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition-all duration-200 transform hover:scale-105"
+                    >
+                        Registrarse
+                    </button>
+                )}
             </form>
 
             <style jsx global>{`
